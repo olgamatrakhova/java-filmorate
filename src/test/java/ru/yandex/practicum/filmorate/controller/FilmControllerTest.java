@@ -34,7 +34,7 @@ public class FilmControllerTest {
     }
 
     @Test
-    void createNewCorrectFilmOkTest() throws Exception {
+    void addFilm_correctFilm_okTest() throws Exception {
         mockMvc.perform(post("/films")
                         .content(objectMapper.writeValueAsString(testFilm))
                         .contentType("application/json"))
@@ -44,7 +44,7 @@ public class FilmControllerTest {
     }
 
     @Test
-    void createNewBlankNameFilmBadTest() throws Exception {
+    void addFilm_blankName_badRequestTest() throws Exception {
         testFilm.setName("");
         mockMvc.perform(post("/films")
                         .content(objectMapper.writeValueAsString(testFilm))
@@ -53,7 +53,7 @@ public class FilmControllerTest {
     }
 
     @Test
-    void createNewLongDescriptionFilmBadTest() throws Exception {
+    void addFilm_longDescription_badRequestTest() throws Exception {
         testFilm.setDescription("Размер описания этого фильма должен превышать двести символов." +
                 "Это очень очень очень очень очень очень очень очень очень очень очень длинное предлинное описание фильма," +
                 "которое должно превышать в описание двести символов. Точно должно превышать!");
@@ -64,7 +64,7 @@ public class FilmControllerTest {
     }
 
     @Test
-    void createNewFutureDateFilmBadTest() throws Exception {
+    void addFilm_futureRealiseDate_badRequestTest() throws Exception {
         testFilm.setReleaseDate(LocalDate.of(2036, 9, 19));
         mockMvc.perform(post("/films")
                         .content(objectMapper.writeValueAsString(testFilm))
@@ -73,7 +73,7 @@ public class FilmControllerTest {
     }
 
     @Test
-    void createNewVeryEarlyFilmDateBadTest() throws Exception {
+    void addFilm_earlyReleaseDate_badRequestTest() throws Exception {
         testFilm.setReleaseDate(LocalDate.of(1885, 12, 12));
         mockMvc.perform(post("/films")
                         .content(objectMapper.writeValueAsString(testFilm))

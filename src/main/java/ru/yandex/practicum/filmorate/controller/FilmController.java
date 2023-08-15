@@ -3,11 +3,9 @@ package ru.yandex.practicum.filmorate.controller;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.FilmException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import javax.validation.Valid;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,7 +27,6 @@ public class FilmController {
 
     @PostMapping
     public Film addFilm(@Valid @RequestBody Film film) {
-        filmValidation(film);
         film.setId(getIdFilm());
         films.put(film.getId(), film);
         log.info("Запрос на добавление фильмов. Фильм добавлен.");
@@ -37,9 +34,8 @@ public class FilmController {
     }
 
     @PutMapping
-    public Film uodateFilm(@Valid @RequestBody Film film) {
-        if (films.get(film.getId()) != null) {
-            filmValidation(film);
+    public Film updateFilm(@Valid @RequestBody Film film) {
+        if (films.containsKey(film.getId())) {
             films.put(film.getId(), film);
             log.info("Запрос на изменения фильма. Фильм изменён.");
         } else {
@@ -51,11 +47,5 @@ public class FilmController {
 
     private int getIdFilm() {
         return ++idFilm;
-    }
-
-    private void filmValidation(Film film) throws ValidationException {
-        if (film.getReleaseDate().isBefore(LocalDate.parse("1895-12-28"))) {
-            throw new ValidationException("Некорректно указана дата релиза фильма.");
-        }
     }
 }

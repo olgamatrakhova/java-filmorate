@@ -39,7 +39,7 @@ public class UserControllerTest {
 
     @Test
     @Order(1)
-    void createNewUserOkTest() throws Exception {
+    void addUser_correctUser_OkTest() throws Exception {
         mockMvc.perform(post("/users")
                         .content(objectMapper.writeValueAsString(testUser))
                         .contentType("application/json"))
@@ -49,7 +49,7 @@ public class UserControllerTest {
     }
 
     @Test
-    void createNewBlankNameUserOkTest() throws Exception {
+    void addUser_blankName_OkTest() throws Exception {
         testUser.setName("");
         mockMvc.perform(post("/users")
                         .content(objectMapper.writeValueAsString(testUser))
@@ -60,7 +60,7 @@ public class UserControllerTest {
     }
 
     @Test
-    void createNewBadEmailUserBadTest() throws Exception {
+    void addUser_badEmail_badRequestTest() throws Exception {
         testUser.setEmail("badEmail.ru");
         mockMvc.perform(post("/users")
                         .content(objectMapper.writeValueAsString(testUser))
@@ -69,7 +69,7 @@ public class UserControllerTest {
     }
 
     @Test
-    void createNewLoginBlankUserBadTest() throws Exception {
+    void addUser_blankLogin_badRequestTest() throws Exception {
         testUser.setLogin("");
         mockMvc.perform(post("/users")
                         .content(objectMapper.writeValueAsString(testUser))
@@ -78,7 +78,7 @@ public class UserControllerTest {
     }
 
     @Test
-    void createNewFutureBirthdayUserBadTest() throws Exception {
+    void addUser_futureBirthdayDate_badRequestTest() throws Exception {
         testUser.setBirthday(LocalDate.parse("2028-07-26"));
         mockMvc.perform(post("/users")
                         .content(objectMapper.writeValueAsString(testUser))
