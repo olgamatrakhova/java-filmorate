@@ -11,7 +11,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Constraint(validatedBy = ReleaseDateValidator.class)
 public @interface ValidateReleaseDate {
-
     String message() default "Некорректно указана дата релиза фильма.";
 
     Class<?>[] groups() default {};
