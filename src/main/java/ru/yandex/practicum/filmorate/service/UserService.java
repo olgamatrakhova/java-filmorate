@@ -13,10 +13,30 @@ import java.util.stream.Collectors;
 
 @Service
 public class UserService {
-    public UserStorage userStorage;
+    private final UserStorage userStorage;
 
     public UserService(UserStorage userStorage) {
         this.userStorage = userStorage;
+    }
+
+    public List<User> getUsers() {
+        return userStorage.getUsers();
+    }
+
+    public User getUserById(Integer id) {
+        return userStorage.getUserById(id);
+    }
+
+    public User addUser(User user) {
+        return userStorage.addUser(user);
+    }
+
+    public User updateUser(User user) {
+        return userStorage.updateUser(user);
+    }
+
+    public void deleteUserById(Integer id) {
+        userStorage.deleteUserById(id);
     }
 
     public void addFriends(int userId, int friendId) {
@@ -76,20 +96,19 @@ public class UserService {
         } else {
             throw new NotFoundException("Нет пользователя с id = " + userId);
         }
-        return user.getFriends().stream().map(u -> userStorage.getUserById(u)).collect(Collectors.toList());
+        return user.getFriends().stream().map(userStorage::getUserById).collect(Collectors.toList());
     }
 
     public List<User> getCommonFriends(int userId, int otherUserId) {
         User user = userStorage.getUserById(userId);
         User otherUser = userStorage.getUserById(otherUserId);
         List<User> result = new ArrayList<>();
-        Set<Integer> commonFriends = null;
         if (user != null) {
             if (otherUser != null) {
                 if (user.getFriends() != null && otherUser.getFriends() != null) {
-                    commonFriends = new HashSet<>(user.getFriends());
+                    Set<Integer> commonFriends = new HashSet<>(user.getFriends());
                     commonFriends.retainAll(otherUser.getFriends());
-                    result = commonFriends.stream().map(x -> userStorage.getUserById(x)).collect(Collectors.toList());
+                    result = commonFriends.stream().map(userStorage::getUserById).collect(Collectors.toList());
                 }
             } else {
                 throw new NotFoundException("Нет пользователя с id = " + otherUserId);
