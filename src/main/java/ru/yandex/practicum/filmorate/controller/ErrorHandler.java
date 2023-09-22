@@ -11,7 +11,7 @@ public class ErrorHandler {
     @ExceptionHandler({ValidationException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Map<String, String> handleValidationException(final Exception e) {
-        return Map.of("error ", " validation failed "+ e.getMessage());
+        return Map.of("error ", e.getMessage());
     }
 
     @ExceptionHandler
