@@ -11,7 +11,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Constraint(validatedBy = UserNameValidator.class)
 public @interface ValidateUserName {
-
     String message() default "Пустое имя изменено на логин";
 
     Class<?>[] groups() default {};

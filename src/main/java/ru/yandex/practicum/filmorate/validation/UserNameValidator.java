@@ -8,7 +8,7 @@ import javax.validation.ConstraintValidatorContext;
 public class UserNameValidator implements ConstraintValidator<ValidateUserName, User> {
     @Override
     public boolean isValid(User user, ConstraintValidatorContext constraintValidatorContext) {
-        if (user.getName() == null) {
+        if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
         }
         return true;
