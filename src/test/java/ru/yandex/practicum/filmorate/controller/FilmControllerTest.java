@@ -74,7 +74,6 @@ public class FilmControllerTest {
         ).andExpect(status().is4xxClientError());
     }
 
-
     @Test
     void addFilm_futureRealiseDate_badRequestTest() throws Exception {
         mockMvc.perform(
@@ -89,7 +88,8 @@ public class FilmControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(status().is4xxClientError());
     }
-   @Test
+
+    @Test
     void addFilm_badDuration_badRequestTest() throws Exception {
         mockMvc.perform(
                 post("/films")
