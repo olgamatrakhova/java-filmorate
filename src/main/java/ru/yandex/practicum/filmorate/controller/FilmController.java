@@ -1,25 +1,19 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import javax.validation.Valid;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @Slf4j
+@RequiredArgsConstructor
 public class FilmController {
     private final FilmService filmService;
-
-    @Autowired
-    public FilmController(FilmService filmService) {
-        this.filmService = filmService;
-    }
 
     @GetMapping("/films")
     public List<Film> getFilms() {
@@ -66,12 +60,6 @@ public class FilmController {
     @GetMapping("/films/popular")
     public List<Film> getPopularFilms(@RequestParam(name = "count", defaultValue = "10") Integer count) {
         log.info("Запрос самых популярных фильмов в количестве: {} (getPopularFilms({}))", count, count);
-        return filmService.getPopularFilms(count).stream().map(id -> {
-            try {
-                return filmService.getFilmById(id);
-            } catch (NotFoundException e) {
-                throw new RuntimeException(e);
-            }
-        }).collect(Collectors.toList());
+        return filmService.getPopularFilms(count);
     }
 }
