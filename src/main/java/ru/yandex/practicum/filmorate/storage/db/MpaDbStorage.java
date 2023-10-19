@@ -17,14 +17,14 @@ import java.util.List;
 public class MpaDbStorage implements MpaStorage {
     private final JdbcTemplate jdbcTemplate;
 
-    private Mpa rowMapMpa(ResultSet rs, int rowNum) throws SQLException {
+    private Mpa getRowMapMpa(ResultSet rs, int rowNum) throws SQLException {
         return new Mpa(rs.getInt("mpa_id"), rs.getString("name"));
     }
 
     @Override
     public List<Mpa> getMpa() {
         String sql = "select mpa_id, name from mpa order by mpa_id";
-        return jdbcTemplate.query(sql, this::rowMapMpa);
+        return jdbcTemplate.query(sql, this::getRowMapMpa);
     }
 
     @Override
@@ -32,7 +32,7 @@ public class MpaDbStorage implements MpaStorage {
         String sql = "select mpa_id, name from mpa where mpa_id = ?";
         Mpa mpa;
         try {
-            mpa = jdbcTemplate.queryForObject(sql, this::rowMapMpa, id);
+            mpa = jdbcTemplate.queryForObject(sql, this::getRowMapMpa, id);
         } catch (IncorrectResultSizeDataAccessException e) {
             throw new NotFoundException("Нет рейтинга с id= " + id);
         }

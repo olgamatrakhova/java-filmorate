@@ -5,9 +5,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.db.FilmDbStorage;
-import ru.yandex.practicum.filmorate.storage.db.UserDbStorage;
 
 import java.util.List;
 
@@ -16,8 +14,6 @@ import java.util.List;
 public class FilmService {
     @Qualifier("filmDbStorage")
     private final FilmDbStorage filmStorage;
-    @Qualifier("userDbStorage")
-    private final UserDbStorage userStorage;
 
     public List<Film> getFilms() {
         return filmStorage.getFilms();
@@ -40,31 +36,11 @@ public class FilmService {
     }
 
     public void setLikeFilm(int filmId, int userId) {
-        Film film = filmStorage.getFilmById(filmId);
-        if (film != null) {
-            User user = userStorage.getUserById(userId);
-            if (user != null) {
-                filmStorage.setLikeFilm(filmId, userId);
-            } else {
-                throw new NotFoundException("Нет пользователя а с id = " + userId);
-            }
-        } else {
-            throw new NotFoundException("Нет фильма с id = " + filmId);
-        }
+        filmStorage.setLikeFilm(filmId, userId);
     }
 
     public void unsetLikeFilm(int filmId, int userId) {
-        Film film = filmStorage.getFilmById(filmId);
-        if (film != null) {
-            User user = userStorage.getUserById(userId);
-            if (user != null) {
-                filmStorage.unsetLikeFilm(filmId, userId);
-            } else {
-                throw new NotFoundException("Нет пользователя а с id = " + userId);
-            }
-        } else {
-            throw new NotFoundException("Нет фильма с id = " + filmId);
-        }
+        filmStorage.unsetLikeFilm(filmId, userId);
     }
 
     public List<Film> getPopularFilms(int count) {

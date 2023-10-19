@@ -17,14 +17,14 @@ import java.util.List;
 public class GenreDbStorage implements GenreStorage {
     private final JdbcTemplate jdbcTemplate;
 
-    private Genre rowMapGenre(ResultSet rs, int rowNum) throws SQLException {
+    private Genre getRowMapGenre(ResultSet rs, int rowNum) throws SQLException {
         return new Genre(rs.getInt("genre_id"), rs.getString("name"));
     }
 
     @Override
     public List<Genre> getGenre() {
         String sql = "select genre_id, name from genres order by genre_id";
-        return jdbcTemplate.query(sql, this::rowMapGenre);
+        return jdbcTemplate.query(sql, this::getRowMapGenre);
     }
 
     @Override
@@ -32,7 +32,7 @@ public class GenreDbStorage implements GenreStorage {
         String sql = "select genre_id, name from genres where genre_id = ?";
         Genre genre;
         try {
-            genre = jdbcTemplate.queryForObject(sql, this::rowMapGenre, id);
+            genre = jdbcTemplate.queryForObject(sql, this::getRowMapGenre, id);
         } catch (IncorrectResultSizeDataAccessException e) {
             throw new NotFoundException("Нет жанра с id = " + id);
         }

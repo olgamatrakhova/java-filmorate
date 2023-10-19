@@ -23,7 +23,7 @@ import java.util.Objects;
 public class UserDbStorage implements UserStorage {
     private final JdbcTemplate jdbcTemplate;
 
-    User rowMapUser(ResultSet rs, int rowNum) throws SQLException {
+    private User getRowMapUser(ResultSet rs, int rowNum) throws SQLException {
         return User.builder()
                 .id(rs.getInt("user_id"))
                 .email(rs.getString("email"))
@@ -36,7 +36,7 @@ public class UserDbStorage implements UserStorage {
     @Override
     public List<User> getUsers() {
         String sql = "select user_id, email, login, name, birthday from users";
-        return jdbcTemplate.query(sql, this::rowMapUser);
+        return jdbcTemplate.query(sql, this::getRowMapUser);
     }
 
     @Override
@@ -67,7 +67,7 @@ public class UserDbStorage implements UserStorage {
         String sql = "select user_id, email, login, name, birthday from users where user_id = ?";
         User user;
         try {
-            user = jdbcTemplate.queryForObject(sql, this::rowMapUser, id);
+            user = jdbcTemplate.queryForObject(sql, this::getRowMapUser, id);
         } catch (IncorrectResultSizeDataAccessException e) {
             throw new NotFoundException("Нет пользователя с id = " + id);
         }
@@ -82,27 +82,27 @@ public class UserDbStorage implements UserStorage {
     }
 
     public List<User> getFriends(int userId) {
-        String sql = "select u.* from friends f join users u on u.user_id = f.to_user_id where f.from_user_id = ? ";
-        return jdbcTemplate.query(sql, this::rowMapUser, userId);
+        String sql = "select u.* from friends f join users u on u.user_id = f.to_user_id where f.from_user_id = ?";
+        return jdbcTemplate.query(sql, this::getRowMapUser, userId);
     }
 
     public void addFriend(int userId, int friendId) {
-        int result;
-        String sqlSelAll = "select count(*) from friends f where f.from_user_id = ? and f.to_user_id = ?";
+        String sqlSel = "select (select count(*) from friends f where f.from_user_id = ? and f.to_user_id = ?) c1," +
+                "               (select count(*) from friends f where f.from_user_id = ? and f.to_user_id = ?) c2";
         String sqlIns = "insert into friends(from_user_id, to_user_id, status) values(?, ?, ?)";
         String sqlUpd = "update friends set status = ? where from_user_id = ? and to_user_id = ?";
         try {
-            result = jdbcTemplate.queryForObject(sqlSelAll, Integer.class, userId, friendId);
-            if (result == 0) {
-                result = jdbcTemplate.queryForObject(sqlSelAll, Integer.class, friendId, userId);
-                if (result > 0) {
+            Object[] res = jdbcTemplate.queryForList(sqlSel, userId, friendId, friendId, userId).get(0).values().toArray();
+            if (res[0].equals((long) 0)) {
+                if (!res[1].equals((long) 0)) {
                     jdbcTemplate.update(sqlIns, userId, friendId, true);
                     jdbcTemplate.update(sqlUpd, true, friendId, userId);
                 } else {
                     jdbcTemplate.update(sqlIns, userId, friendId, false);
                 }
             }
-        } catch (Exception e) {
+        } catch (
+                Exception e) {
             throw new NotFoundException("Нет пользователей с id = " + userId + " или id = " + friendId);
         }
     }
@@ -113,10 +113,13 @@ public class UserDbStorage implements UserStorage {
     }
 
     public List<User> getCommonFriends(int userId, int otherId) {
-        String sql = "SELECT * FROM USERS WHERE user_id IN (SELECT f1.to_user_id" +
-                " FROM FRIENDS f1 LEFT JOIN FRIENDS f2 ON f1.TO_USER_ID  = f2.TO_USER_ID " +
-                "WHERE F1.FROM_USER_ID  = ? AND F2.FROM_USER_ID = ?)";
+        String sql = "select * from users" +
+                "       where user_id in (select f1.to_user_id " +
+                "                           from friends f1" +
+                "                           left join friends f2 on f1.to_user_id = f2.to_user_id" +
+                "                          where f1.from_user_id = ?" +
+                "                            and f2.from_user_id = ?)";
 
-        return jdbcTemplate.query(sql, this::rowMapUser, userId, otherId);
+        return jdbcTemplate.query(sql, this::getRowMapUser, userId, otherId);
     }
 }

@@ -13,6 +13,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.FilmGenre;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
 import java.sql.Date;
@@ -30,8 +31,9 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class FilmDbStorage implements FilmStorage {
     private final JdbcTemplate jdbcTemplate;
+    private final UserDbStorage userStorage;
 
-    private Film rowMapFilm(ResultSet rs, int rowNum) throws SQLException {
+    private Film getRowMapFilm(ResultSet rs, int rowNum) throws SQLException {
         return Film.builder()
                 .id(rs.getInt("film_id"))
                 .name(rs.getString("name"))
@@ -44,7 +46,7 @@ public class FilmDbStorage implements FilmStorage {
                 .build();
     }
 
-    private FilmGenre rowMapFilmGenre(ResultSet rs, int rowNum) throws SQLException {
+    private FilmGenre getRowMapFilmGenre(ResultSet rs, int rowNum) throws SQLException {
         return new FilmGenre(rs.getInt("film_id"), new Genre(rs.getInt("genre_id"), rs.getString("name")));
     }
 
@@ -53,7 +55,7 @@ public class FilmDbStorage implements FilmStorage {
         String sql = "select f.*, m.name mpa_name" +
                 "       from films f" +
                 "       join mpa m on m.mpa_id = f.mpa_id";
-        return getFilmsGenre(jdbcTemplate.query(sql, this::rowMapFilm));
+        return getFilmsGenre(jdbcTemplate.query(sql, this::getRowMapFilm));
     }
 
     @Override
@@ -103,7 +105,7 @@ public class FilmDbStorage implements FilmStorage {
         List<Film> films = new ArrayList<>();
         Film film;
         try {
-            film = jdbcTemplate.queryForObject(sql, this::rowMapFilm, id);
+            film = jdbcTemplate.queryForObject(sql, this::getRowMapFilm, id);
             films.add(film);
             films = getFilmsGenre(films);
             if (films != null) film = films.get(0);
@@ -129,7 +131,7 @@ public class FilmDbStorage implements FilmStorage {
                 "        join mpa m on m.mpa_id = f.mpa_id" +
                 "     order by f.rate desc" +
                 "     limit ?";
-        return getFilmsGenre(jdbcTemplate.query(sql, this::rowMapFilm, count));
+        return getFilmsGenre(jdbcTemplate.query(sql, this::getRowMapFilm, count));
     }
 
     private void addFilmGenres(int filmId, Film film) {
@@ -143,7 +145,7 @@ public class FilmDbStorage implements FilmStorage {
                     try {
                         jdbcTemplate.update(sqlIns, filmId, genre.getId());
                     } catch (RuntimeException e) {
-                        throw new NotFoundException("Не удалось создать связь фильма и жанра");
+                        throw new NotFoundException("Не удалось создать связь фильма c id = " + filmId + " и жанра c id = " + genre.getId());
                     }
                 }
             }
@@ -155,7 +157,7 @@ public class FilmDbStorage implements FilmStorage {
                 "       from film_genres fg\n" +
                 "       left join genres g on g.genre_id = fg.genre_id\n" +
                 "     order by fg.film_id";
-        List<FilmGenre> filmGenres = jdbcTemplate.query(sql, this::rowMapFilmGenre);
+        List<FilmGenre> filmGenres = jdbcTemplate.query(sql, this::getRowMapFilmGenre);
         ArrayList<Film> resultFilms = new ArrayList<>();
         for (Film film : films) {
             List<Genre> genres = new ArrayList<>();
@@ -182,14 +184,11 @@ public class FilmDbStorage implements FilmStorage {
 
     public void setLikeFilm(Integer filmId, Integer userId) throws NotFoundException {
         Film film = getFilmById(filmId);
-        if (film == null) {
-            throw new NotFoundException("Фильм не найден.");
-        } else {
-            String sqlIns = "insert into likes(film_id, user_id) values(?, ?)";
-            String sqlUpd = "update films set rate = rate + 1 where film_id = ?";
-            jdbcTemplate.update(sqlIns, filmId, userId);
-            jdbcTemplate.update(sqlUpd, filmId);
-        }
+        User user = userStorage.getUserById(userId);
+        String sqlIns = "insert into likes(film_id, user_id) values(?, ?)";
+        String sqlUpd = "update films set rate = rate + 1 where film_id = ?";
+        jdbcTemplate.update(sqlIns, film.getId(), user.getId());
+        jdbcTemplate.update(sqlUpd, film.getId());
     }
 
     public void unsetLikeFilm(Integer filmId, Integer userId) throws NotFoundException {
@@ -197,14 +196,15 @@ public class FilmDbStorage implements FilmStorage {
         String sqlSel = "select rate from films where film_id = ?";
         String sqlUpd = "update films set rate = ? where film_id = ?";
         Film film = getFilmById(filmId);
-        if (film == null) {
-            throw new NotFoundException("Фильм не найден.");
-        } else {
-            jdbcTemplate.update(sqlDel, filmId, userId);
-            int rate = jdbcTemplate.queryForObject(sqlSel, Integer.class, filmId);
+        User user = userStorage.getUserById(userId);
+        jdbcTemplate.update(sqlDel, film.getId(), user.getId());
+        try {
+            int rate = jdbcTemplate.queryForObject(sqlSel, Integer.class, film.getId());
             if (rate > 0)
                 rate--;
-            jdbcTemplate.update(sqlUpd, rate, filmId);
+            jdbcTemplate.update(sqlUpd, rate, film.getId());
+        } catch (IncorrectResultSizeDataAccessException e) {
+            throw new NotFoundException("Не возможно убрать лайк.");
         }
     }
 }
