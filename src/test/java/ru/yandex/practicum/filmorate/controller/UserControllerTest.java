@@ -97,7 +97,20 @@ public class UserControllerTest {
                 "(\n" +
                 "    film_id INTEGER NOT NULL REFERENCES films (film_id),\n" +
                 "    user_id INTEGER NOT NULL REFERENCES users (user_id)\n" +
-                ");");
+                ");MERGE INTO mpa (mpa_id, name)\n" +
+                "VALUES (1, 'G'),\n" +
+                "       (2, 'PG'),\n" +
+                "       (3, 'PG-13'),\n" +
+                "       (4, 'R'),\n" +
+                "       (5, 'NC-17');\n" +
+                "\n" +
+                "MERGE INTO genres (genre_id, name)\n" +
+                "VALUES (1, 'Комедия'),\n" +
+                "       (2, 'Драма'),\n" +
+                "       (3, 'Мультфильм'),\n" +
+                "       (4, 'Триллер'),\n" +
+                "       (5, 'Документальный'),\n" +
+                "       (6, 'Боевик');");
     }
 
     @Test
