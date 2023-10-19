@@ -6,7 +6,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
 @AutoConfigureTestDatabase
-class FilmorateApplicationTests {
+public class FilmorateApplicationTests {
 
     @Test
     void contextLoads() {
