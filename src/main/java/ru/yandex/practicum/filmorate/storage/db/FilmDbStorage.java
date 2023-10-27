@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.db;
 
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -9,23 +8,12 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.FilmGenre;
-import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.Mpa;
-import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
 import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.sql.*;
+import java.util.*;
 
 @Component("filmDbStorage")
 @RequiredArgsConstructor
@@ -135,11 +123,11 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public List<Film> getCommonFilms(int userId, int friendId){
+    public List<Film> getCommonFilms(int userId, int friendId) {
         String sql = "SELECT f.*, m.name AS mpa_name " +
                 " FROM (SELECT FILM_ID " +
                 " FROM (	SELECT * " +
-                 "FROM LIKES AS l " +
+                "FROM LIKES AS l " +
                 " WHERE l.USER_ID = ? " +
                 " UNION " +
                 " SELECT * " +
