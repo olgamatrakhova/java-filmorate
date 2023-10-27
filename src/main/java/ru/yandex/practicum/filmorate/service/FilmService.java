@@ -51,6 +51,10 @@ public class FilmService {
         return filmStorage.getPopularFilms(count);
     }
 
+    public List<Film> getCommonFilms(int userId, int friendId) {
+        return filmStorage.getCommonFilms(userId, friendId);
+    }
+
     public List<Film> searchFilms(String query, List<String> by) {
         if (by.size() == 2) {
             return filmStorage.searchByDirectorAndTitle(query);

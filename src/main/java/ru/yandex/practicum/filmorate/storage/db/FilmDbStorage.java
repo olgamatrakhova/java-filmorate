@@ -136,6 +136,29 @@ public class FilmDbStorage implements FilmStorage {
         return getFilmsGenre(jdbcTemplate.query(sql, this::getRowMapFilm, count));
     }
 
+    @Override
+    public List<Film> getCommonFilms(int userId, int friendId){
+        String sql = "SELECT f.*, m.name AS mpa_name " +
+                " FROM (SELECT FILM_ID " +
+                " FROM (	SELECT * " +
+                 "FROM LIKES AS l " +
+                " WHERE l.USER_ID = ? " +
+                " UNION " +
+                " SELECT * " +
+                " FROM LIKES AS l2 " +
+                " WHERE l2.USER_ID = ? " +
+                " ) AS c " +
+                " GROUP BY c.FILM_ID " +
+                " HAVING COUNT(FILM_ID) = 2) AS c " +
+                " LEFT JOIN FILMS AS f ON c.film_id = f.FILM_ID " +
+                " LEFT JOIN  MPA AS m ON f.MPA_ID = m.MPA_ID " +
+                " LEFT JOIN LIKES AS l3 ON f.film_id = l3.FILM_ID " +
+                " GROUP BY l3.FILM_ID " +
+                " ORDER BY COUNT(USER_ID) DESC ";
+
+        return getFilmsGenre(jdbcTemplate.query(sql, this::getRowMapFilm, userId, friendId));
+    }
+
     private void addFilmGenres(int filmId, Film film) {
         String sqlSel = "select count(*) from film_genres where film_id = ? and genre_id = ?";
         String sqlIns = "insert into film_genres (film_id, genre_id) values(?, ?)";
@@ -169,6 +192,7 @@ public class FilmDbStorage implements FilmStorage {
                 }
             }
             film.setGenres(genres);
+            setUsersLikes(film != null ? film.getId() : 0, film);
             resultFilms.add(film);
         }
         return resultFilms;
