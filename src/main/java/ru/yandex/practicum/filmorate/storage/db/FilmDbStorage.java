@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.storage.db;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -26,6 +27,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component("filmDbStorage")
 @RequiredArgsConstructor
@@ -206,5 +208,44 @@ public class FilmDbStorage implements FilmStorage {
         } catch (IncorrectResultSizeDataAccessException e) {
             throw new NotFoundException("Не возможно убрать лайк.");
         }
+    }
+
+    public List<Film> searchByDirectorAndTitle(String query) {
+        String sql = "select f.*, m.name mpa_name, d.director_name" +
+                "       from films f" +
+                "       join mpa m on m.mpa_id = f.mpa_id" +
+                "       LEFT OUTER JOIN directors AS d ON f.director_id = d.director_id" +
+                "       WHERE f.name COLLATE UTF8_GENERAL_CI LIKE '%?%' OR d.director_name COLLATE UTF8_GENERAL_CI LIKE '%?%'";
+        List<Film> films = getFilmsDirector(getFilmsGenre(jdbcTemplate.query(sql, this::getRowMapFilm, query, query)));
+        //TODO не забыть сделать метод по режиссерам
+        return films.stream()
+                .peek(f -> setUsersLikes(f.getId(), f))
+                .collect(Collectors.toList());
+    }
+
+    public List<Film> searchByDirector(String query) {
+        String sql = "select f.*, m.name mpa_name, d.director_name" +
+                "       from films f" +
+                "       join mpa m on m.mpa_id = f.mpa_id" +
+                "       LEFT OUTER JOIN directors AS d ON f.director_id = d.director_id" +
+                "       WHERE d.director_name COLLATE UTF8_GENERAL_CI LIKE '%?%'";
+        List<Film> films = getFilmsDirector(getFilmsGenre(jdbcTemplate.query(sql, this::getRowMapFilm, query)));
+        //TODO не забыть сделать метод по режиссерам
+        return films.stream()
+                .peek(f -> setUsersLikes(f.getId(), f))
+                .collect(Collectors.toList());
+    }
+
+    public List<Film> searchByTitle(String query) {
+        String sql = "select f.*, m.name mpa_name, d.director_name" +
+                "       from films f" +
+                "       join mpa m on m.mpa_id = f.mpa_id" +
+                "       LEFT OUTER JOIN directors AS d ON f.director_id = d.director_id" +
+                "       WHERE f.name COLLATE UTF8_GENERAL_CI LIKE '%?%'";
+        List<Film> films = getFilmsDirector(getFilmsGenre(jdbcTemplate.query(sql, this::getRowMapFilm, query)));
+        //TODO не забыть сделать метод по режиссерам
+        return films.stream()
+                .peek(f -> setUsersLikes(f.getId(), f))
+                .collect(Collectors.toList());
     }
 }

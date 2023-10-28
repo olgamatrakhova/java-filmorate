@@ -7,6 +7,7 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.db.FilmDbStorage;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -48,5 +49,20 @@ public class FilmService {
             throw new NotFoundException("Count должен быть больше или равен 1. Ваше значение: " + count);
         }
         return filmStorage.getPopularFilms(count);
+    }
+
+    public List<Film> searchFilms(String query, List<String> by) {
+        if (by.size() == 2) {
+            return filmStorage.searchByDirectorAndTitle(query);
+        } else {
+            switch (by.get(0)) {
+                case "director":
+                    return filmStorage.searchByDirector(query);
+                case "title":
+                    return filmStorage.searchByTitle(query);
+                default:
+                    return new ArrayList<>();
+            }
+        }
     }
 }
