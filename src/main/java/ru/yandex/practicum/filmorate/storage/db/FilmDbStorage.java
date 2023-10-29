@@ -192,7 +192,6 @@ public class FilmDbStorage implements FilmStorage {
                 }
             }
             film.setGenres(genres);
-            setUsersLikes(film != null ? film.getId() : 0, film);
             resultFilms.add(film);
         }
         return resultFilms;
@@ -232,6 +231,36 @@ public class FilmDbStorage implements FilmStorage {
         } catch (IncorrectResultSizeDataAccessException e) {
             throw new NotFoundException("Не возможно убрать лайк.");
         }
+    }
+
+    public Map<Integer, List<Integer>> getAllLikedFilmsIdByUsers() {
+        String sql = "SELECT user_id, film_id FROM likes";
+        Map<Integer, List<Integer>> likedFilms = new HashMap<>();
+        jdbcTemplate.query(sql, (rs, rowNum) -> {
+            Integer userId = rs.getInt("user_id");
+            if(!likedFilms.containsKey(userId)) {
+                likedFilms.put(userId, new ArrayList<>());
+                likedFilms.get(userId).add(rs.getInt("film_id"));
+            } else {
+                likedFilms.get(userId).add(rs.getInt("film_id"));
+            }
+            return likedFilms;
+        });
+        return likedFilms;
+    }
+
+    public List<Integer> getFilmsIdLikedByUser(Integer userId) {
+        String sql = "SELECT user_id, film_id FROM likes WHERE user_id = ?";
+        return jdbcTemplate.query(sql, (rs, rowNum) -> rs.getInt("film_id"), userId);
+    }
+
+    public List<Film> getRecommendations(List<Integer> recommendedFilmIds) {
+        String sql = "select f.*, m.name mpa_name" +
+                "        from films f" +
+                "        join mpa m on m.mpa_id = f.mpa_id" +
+                "     order by f.rate desc" +
+                "     where f.film_id in ?";
+        return getFilmsGenre(jdbcTemplate.query(sql, this::getRowMapFilm, recommendedFilmIds));
     }
 
     public List<Film> searchByDirectorAndTitle(String query) {
