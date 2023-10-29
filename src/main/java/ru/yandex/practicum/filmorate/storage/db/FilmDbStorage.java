@@ -3,6 +3,9 @@ package ru.yandex.practicum.filmorate.storage.db;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
@@ -21,16 +24,20 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component("filmDbStorage")
 @RequiredArgsConstructor
 public class FilmDbStorage implements FilmStorage {
     private final JdbcTemplate jdbcTemplate;
     private final UserDbStorage userStorage;
+    private final NamedParameterJdbcTemplate namedJdbcTemplate;
 
     private Film getRowMapFilm(ResultSet rs, int rowNum) throws SQLException {
         return Film.builder()
@@ -229,5 +236,39 @@ public class FilmDbStorage implements FilmStorage {
         } catch (IncorrectResultSizeDataAccessException e) {
             throw new NotFoundException("Не возможно убрать лайк.");
         }
+    }
+
+    public Map<Integer, List<Integer>> getAllLikedFilmsId() {
+        String sql = "SELECT user_id, film_id FROM likes";
+        Map<Integer, List<Integer>> likedFilms = new HashMap<>();
+        jdbcTemplate.query(sql, (rs, rowNum) -> {
+            Integer userId = rs.getInt("user_id");
+            if (!likedFilms.containsKey(userId)) {
+                likedFilms.put(userId, new ArrayList<>());
+                likedFilms.get(userId).add(rs.getInt("film_id"));
+            } else {
+                likedFilms.get(userId).add(rs.getInt("film_id"));
+            }
+            return likedFilms;
+        });
+        return likedFilms;
+    }
+
+    public List<Integer> getFilmsIdLikedByUser(Integer userId) {
+        String sql = "SELECT user_id, film_id FROM likes WHERE user_id = ?";
+        return jdbcTemplate.query(sql, (rs, rowNum) -> rs.getInt("film_id"), userId);
+    }
+
+    public List<Film> getRecommendations(List<Integer> recommendedFilmIds) {
+        String sql = "select f.*, m.name mpa_name" +
+                "        from films f" +
+                "        join mpa m on m.mpa_id = f.mpa_id" +
+                "     where f.film_id in (:filmsId)" +
+                "     order by f.rate desc";
+        SqlParameterSource parameters = new MapSqlParameterSource("filmsId", recommendedFilmIds);
+        List<Film> recommendedFilms = getFilmsGenre(namedJdbcTemplate.query(sql, parameters, this::getRowMapFilm));
+        return recommendedFilms.stream()
+                .peek(f -> setUsersLikes(f.getId(), f))
+                .collect(Collectors.toList());
     }
 }
