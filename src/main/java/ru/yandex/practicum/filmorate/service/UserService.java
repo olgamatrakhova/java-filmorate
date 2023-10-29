@@ -67,7 +67,7 @@ public class UserService {
             List<Integer> intersection = e.getValue().stream()
                     .filter(filmsLikedByUser::contains)
                     .collect(Collectors.toList());
-            if(intersection.size() > maxOfIntersections) {
+            if (intersection.size() > maxOfIntersections) {
                 maxOfIntersections = intersection.size();
                 recommendedUserId = e.getKey();
             }
