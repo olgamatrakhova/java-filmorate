@@ -59,6 +59,7 @@ public class UserService {
 
     public List<Film> getRecommendations(Integer userId) {
         Map<Integer, List<Integer>> allLikedFilms = filmStorage.getAllLikedFilmsIdByUsers();
+        allLikedFilms.remove(userId);
         List<Integer> filmsLikedByUser = filmStorage.getFilmsIdLikedByUser(userId);
         int recommendedUserId = 0;
         int maxOfIntersections = 0;
@@ -71,9 +72,12 @@ public class UserService {
                 recommendedUserId = e.getKey();
             }
         }
-        List<Integer> filmsLikedByRecommendedUser = filmStorage.getFilmsIdLikedByUser(recommendedUserId);
-        List<Integer> recommendedFilmIds = new ArrayList<>(filmsLikedByRecommendedUser);
-        recommendedFilmIds.removeAll(filmsLikedByUser);
+        List<Integer> filmsLikedByRecommendedUser = allLikedFilms.get(recommendedUserId);
+        List<Integer> recommendedFilmIds = new ArrayList<>();
+        if (filmsLikedByRecommendedUser != null) {
+            recommendedFilmIds.addAll(filmsLikedByRecommendedUser);
+            recommendedFilmIds.removeAll(filmsLikedByUser);
+        }
         return filmStorage.getRecommendations(recommendedFilmIds);
     }
 }
