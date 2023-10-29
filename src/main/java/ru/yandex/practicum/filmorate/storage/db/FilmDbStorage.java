@@ -26,8 +26,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -237,7 +239,7 @@ public class FilmDbStorage implements FilmStorage {
         }
     }
 
-    public Map<Integer, List<Integer>> getAllLikedFilmsIdByUsers() {
+    public Map<Integer, List<Integer>> getAllLikedFilmsId() {
         String sql = "SELECT user_id, film_id FROM likes";
         Map<Integer, List<Integer>> likedFilms = new HashMap<>();
         jdbcTemplate.query(sql, (rs, rowNum) -> {
