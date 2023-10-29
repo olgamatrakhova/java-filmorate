@@ -242,7 +242,7 @@ public class FilmDbStorage implements FilmStorage {
         Map<Integer, List<Integer>> likedFilms = new HashMap<>();
         jdbcTemplate.query(sql, (rs, rowNum) -> {
             Integer userId = rs.getInt("user_id");
-            if(!likedFilms.containsKey(userId)) {
+            if (!likedFilms.containsKey(userId)) {
                 likedFilms.put(userId, new ArrayList<>());
                 likedFilms.get(userId).add(rs.getInt("film_id"));
             } else {
