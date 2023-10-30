@@ -7,7 +7,6 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.db.FilmDbStorage;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -53,6 +52,10 @@ public class FilmService {
 
     public List<Film> getCommonFilms(int userId, int friendId) {
         return filmStorage.getCommonFilms(userId, friendId);
+    }
+
+    public List<Film> getDirectorFilmsSort(int directorId, String sortBy) {
+        return filmStorage.getDirectorFilmsSort(directorId, sortBy);
     }
 
     public List<Film> searchFilms(String query, List<String> by) {
