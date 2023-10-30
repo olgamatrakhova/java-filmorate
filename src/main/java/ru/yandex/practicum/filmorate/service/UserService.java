@@ -58,7 +58,7 @@ public class UserService {
     }
 
     public List<Film> getRecommendations(Integer userId) {
-        Map<Integer, List<Integer>> allLikedFilms = filmStorage.getAllLikedFilmsId();
+        Map<Integer, List<Integer>> allLikedFilms = filmStorage.getAllLikedFilmsIdByUsers();
         allLikedFilms.remove(userId);
         List<Integer> filmsLikedByUser = filmStorage.getFilmsIdLikedByUser(userId);
         int recommendedUserId = 0;
