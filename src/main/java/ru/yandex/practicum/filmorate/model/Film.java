@@ -7,6 +7,7 @@ import lombok.NonNull;
 import ru.yandex.practicum.filmorate.validation.ValidateReleaseDate;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Past;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.Size;
 import java.time.LocalDate;
@@ -23,7 +24,8 @@ public class Film {
     private String name;
     @Size(max = 200)
     private String description;
-    @ValidateReleaseDate
+    @Past
+    @ValidateReleaseDate(message = "")
     private LocalDate releaseDate;
     @Positive
     private int duration;
@@ -32,5 +34,4 @@ public class Film {
     private List<Genre> genres;
     @NonNull
     private Mpa mpa;
-    private List<Director> directors;
 }
