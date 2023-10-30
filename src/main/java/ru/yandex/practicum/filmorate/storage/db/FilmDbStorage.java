@@ -137,11 +137,11 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public List<Film> getCommonFilms(int userId, int friendId) {
+    public List<Film> getCommonFilms(int userId, int friendId){
         String sql = "SELECT f.*, m.name AS mpa_name " +
                 " FROM (SELECT FILM_ID " +
                 " FROM (	SELECT * " +
-                "FROM LIKES AS l " +
+                 "FROM LIKES AS l " +
                 " WHERE l.USER_ID = ? " +
                 " UNION " +
                 " SELECT * " +
