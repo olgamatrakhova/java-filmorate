@@ -7,6 +7,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import java.util.List;
 
 @RestController
@@ -61,5 +62,17 @@ public class FilmController {
     public List<Film> getPopularFilms(@RequestParam(name = "count", defaultValue = "10") Integer count) {
         log.info("Запрос самых популярных фильмов в количестве: {} (getPopularFilms({}))", count, count);
         return filmService.getPopularFilms(count);
+    }
+
+    @GetMapping("/films/common")
+    public List<Film> commonFilms(@RequestParam(name = "userId") Integer userId, @RequestParam(name = "friendId") Integer friendId) {
+        log.info("Запрос общих фильмов для пользователя с id = {}, и пользователя с id = {}", userId, friendId);
+        return filmService.getCommonFilms(userId, friendId);
+    }
+
+    @GetMapping("/films/director/{directorId}")
+    public List<Film> getDirectorFilmsSort(@PathVariable("directorId") @Min(1) int directorId, @RequestParam(value = "sortBy", defaultValue = "likes") String sortBy) {
+        log.info("Запрос ны вывод всех фильмов режиссера с id = {}, отсортированных по sort = {}", directorId, sortBy);
+        return filmService.getDirectorFilmsSort(directorId, sortBy);
     }
 }

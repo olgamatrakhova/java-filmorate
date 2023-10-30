@@ -49,4 +49,12 @@ public class FilmService {
         }
         return filmStorage.getPopularFilms(count);
     }
+
+    public List<Film> getCommonFilms(int userId, int friendId) {
+        return filmStorage.getCommonFilms(userId, friendId);
+    }
+
+    public List<Film> getDirectorFilmsSort(int directorId, String sortBy) {
+        return filmStorage.getDirectorFilmsSort(directorId, sortBy);
+    }
 }
