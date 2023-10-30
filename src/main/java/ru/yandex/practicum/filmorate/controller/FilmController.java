@@ -62,11 +62,4 @@ public class FilmController {
         log.info("Запрос самых популярных фильмов в количестве: {} (getPopularFilms({}))", count, count);
         return filmService.getPopularFilms(count);
     }
-
-    @GetMapping("/films/search")
-    public List<Film> searchFilms(@RequestParam String query, @RequestParam List<String> by) {
-        log.info("Поиск фильмов по запросу: \"{}\" по параметрам {}, {}", query, by.get(0), by.get(1));
-        return filmService.searchFilms(query, by);
-    }
-
 }
