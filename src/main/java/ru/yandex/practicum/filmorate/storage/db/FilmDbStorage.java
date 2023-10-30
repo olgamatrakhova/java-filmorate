@@ -216,8 +216,7 @@ public class FilmDbStorage implements FilmStorage {
                 "       join mpa m on m.mpa_id = f.mpa_id" +
                 "       LEFT OUTER JOIN directors AS d ON f.director_id = d.director_id" +
                 "       WHERE f.name COLLATE UTF8_GENERAL_CI LIKE '%?%' OR d.director_name COLLATE UTF8_GENERAL_CI LIKE '%?%'";
-        List<Film> films = getFilmsGenre(jdbcTemplate.query(sql, this::getRowMapFilm, query, query));
-        //List<Film> films = getFilmsDirector(getFilmsGenre(jdbcTemplate.query(sql, this::getRowMapFilm, query, query)));
+        List<Film> films = getFilmsDirector(getFilmsGenre(jdbcTemplate.query(sql, this::getRowMapFilm, query, query)));
         //TODO не забыть сделать метод по режиссерам
         return films.stream()
                 .peek(f -> setUsersLikes(f.getId(), f))
@@ -230,8 +229,7 @@ public class FilmDbStorage implements FilmStorage {
                 "       join mpa m on m.mpa_id = f.mpa_id" +
                 "       LEFT OUTER JOIN directors AS d ON f.director_id = d.director_id" +
                 "       WHERE d.director_name COLLATE UTF8_GENERAL_CI LIKE '%?%'";
-        List<Film> films = getFilmsGenre(jdbcTemplate.query(sql, this::getRowMapFilm, query));
-        //List<Film> films = getFilmsDirector(getFilmsGenre(jdbcTemplate.query(sql, this::getRowMapFilm, query)));
+        List<Film> films = getFilmsDirector(getFilmsGenre(jdbcTemplate.query(sql, this::getRowMapFilm, query)));
         //TODO не забыть сделать метод по режиссерам
         return films.stream()
                 .peek(f -> setUsersLikes(f.getId(), f))
@@ -244,8 +242,7 @@ public class FilmDbStorage implements FilmStorage {
                 "       join mpa m on m.mpa_id = f.mpa_id" +
                 "       LEFT OUTER JOIN directors AS d ON f.director_id = d.director_id" +
                 "       WHERE f.name COLLATE UTF8_GENERAL_CI LIKE '%?%'";
-        List<Film> films = getFilmsGenre(jdbcTemplate.query(sql, this::getRowMapFilm, query));
-        //List<Film> films = getFilmsDirector(getFilmsGenre(jdbcTemplate.query(sql, this::getRowMapFilm, query)));
+        List<Film> films = getFilmsDirector(getFilmsGenre(jdbcTemplate.query(sql, this::getRowMapFilm, query)));
         //TODO не забыть сделать метод по режиссерам
         return films.stream()
                 .peek(f -> setUsersLikes(f.getId(), f))
