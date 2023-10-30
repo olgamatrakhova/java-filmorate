@@ -5,9 +5,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
@@ -37,7 +34,6 @@ import java.util.stream.Collectors;
 public class FilmDbStorage implements FilmStorage {
     private final JdbcTemplate jdbcTemplate;
     private final UserDbStorage userStorage;
-    private final NamedParameterJdbcTemplate namedJdbcTemplate;
 
     private Film getRowMapFilm(ResultSet rs, int rowNum) throws SQLException {
         return Film.builder()
@@ -262,13 +258,9 @@ public class FilmDbStorage implements FilmStorage {
         String sql = "select f.*, m.name mpa_name" +
                 "        from films f" +
                 "        join mpa m on m.mpa_id = f.mpa_id" +
-                "     where f.film_id in (:filmsId)" +
-                "     order by f.rate desc";
-        SqlParameterSource parameters = new MapSqlParameterSource("filmsId", recommendedFilmIds);
-        List<Film> recommendedFilms = getFilmsGenre(namedJdbcTemplate.query(sql, parameters, this::getRowMapFilm));
-        return recommendedFilms.stream()
-                .peek(f -> setUsersLikes(f.getId(), f))
-                .collect(Collectors.toList());
+                "     order by f.rate desc" +
+                "     where f.film_id in ?";
+        return getFilmsGenre(jdbcTemplate.query(sql, this::getRowMapFilm, recommendedFilmIds));
     }
 
     public List<Film> searchByDirectorAndTitle(String query) {
