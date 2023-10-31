@@ -345,4 +345,23 @@ public class FilmDbStorage implements FilmStorage {
         filmSort = getFilmsGenre(filmSort);
         return filmSort;
     }
+
+    public List<Film> searchByDirector(String query) {
+        String sqlByDirector = "select f.*, m.name mpa_name" +
+                "       from films f" +
+                "       join mpa m on m.mpa_id = f.mpa_id" +
+                "       where f.film_id in (select fd.film_id" +
+                "                           from film_directors fd" +
+                "                           join directors d on d.director_id = fd.director_id" +
+                "                           where lower(d.name) LIKE CONCAT('%', ? ,'%'))";
+        return getFilmsGenre(jdbcTemplate.query(sqlByDirector, this::getRowMapFilm, query.toLowerCase()));
+    }
+
+    public List<Film> searchByTitle(String query) {
+        String sqlByTitle = "select f.*, m.name mpa_name" +
+                "       from films f" +
+                "       join mpa m on m.mpa_id = f.mpa_id" +
+                "       where lower(f.name) LIKE CONCAT('%', ?, '%')";
+        return getFilmsGenre(jdbcTemplate.query(sqlByTitle, this::getRowMapFilm, query.toLowerCase()));
+    }
 }
