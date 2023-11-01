@@ -16,7 +16,7 @@ import java.util.Map;
 @AllArgsConstructor
 public class Review {
 
-    private int reviewId = 0;
+    private Integer reviewId = 0;
     @NotNull
     private String content;
     @NotNull

@@ -58,7 +58,8 @@ public class ReviewService {
     private Review checkReview(Review review) {
         if ((review == null) || (review.getUserId() == null) || (review.getFilmId() == null)
                 || (review.getContent() == null) || (review.getIsPositive() == null)
-                || (review.getUserId() < 0) || (review.getFilmId() < 0)) {
+                || (review.getUserId() < 0) || (review.getFilmId() < 0)
+                || (review.getReviewId() == null)) {
             throw new NotFoundException("Необходимо правильно заполнить отзыв");
         }
         return review;

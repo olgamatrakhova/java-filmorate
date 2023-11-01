@@ -210,7 +210,6 @@ public class ReviewDbStorage implements ReviewStorage {
         return result;
     }
 
-
     private int getIdLastAddReview(Review review) {
         String sql = " SELECT review_id FROM reviews " +
                 " WHERE user_id = ? AND film_id = ? " +
