@@ -8,6 +8,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.db.FilmDbStorage;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -74,4 +75,20 @@ public class FilmService {
             }
         }
     }
+
+    public List<Film> getPopularFilmsByGenreAndYear(int limit, Optional<Long> genreId, Optional<Long> year){
+        List<Film> films;
+
+        if (genreId.isEmpty() && year.isEmpty()) {
+            films =  getPopularFilms(limit);
+        } else if (genreId.isPresent() && year.isEmpty()) {
+            films =  filmStorage.getPopularFilmsByGenre(limit, genreId.get());
+        } else if (genreId.isEmpty()) {
+            films =  filmStorage.getPopularFilmsByYear(limit, year.get());
+        } else {
+            films =  filmStorage.getPopularFilmsByGenreAndYear(limit, genreId.get(), year.get());
+        }
+        return films;
+    }
+
 }
