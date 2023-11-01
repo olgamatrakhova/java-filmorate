@@ -25,24 +25,18 @@ public class ReviewService {
 
     public Review getReviewById(int id) {
         return reviewStorage.getReviewById(id);
-
     }
 
     public Review addReview(Review review) {
         return reviewStorage.addReview(checkReview(review));
-
-
     }
 
     public Review updateReview(Review review) {
         return reviewStorage.updateReview(checkReview(review));
-
-
     }
 
     public boolean deleteReview(int id) {
         return reviewStorage.deleteReview(id);
-
     }
 
     public Review addLikeReviewFromUser(int id, int userId) {
@@ -55,12 +49,10 @@ public class ReviewService {
 
     public Review delLikeReviewFromUser(int id, int userId) {
         return reviewStorage.deleteLikeFromUser(id, userId);
-
     }
 
     public Review delDislikeReviewFromUser(int id, int userId) {
         return reviewStorage.deleteDislikeFromUser(id, userId);
-
     }
 
     private Review checkReview(Review review) {

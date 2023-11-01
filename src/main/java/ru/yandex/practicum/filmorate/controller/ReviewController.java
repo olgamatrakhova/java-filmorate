@@ -25,8 +25,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ReviewController {
     private final ReviewService reviewService;
-
-
     @GetMapping
     public List<Review> getReviewByFilmId(@RequestParam(name = "filmId", defaultValue = "-1") int filmId, @RequestParam(name = "count", defaultValue = "10") int count) {
         if (filmId == -1) {

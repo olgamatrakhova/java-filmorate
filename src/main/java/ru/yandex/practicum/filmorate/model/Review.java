@@ -22,14 +22,10 @@ public class Review {
     @NotNull
     private Boolean isPositive;
     @NotNull
-    //@Positive
     private Integer userId;
     @NotNull
-    //@Positive
     private Integer filmId;
-
     private int useful = 0;
     @ToString.Exclude
     private Map<Integer, Boolean> likeReviewList = new HashMap<>(); //список оценивших отзыв и их оценка(полезно или нет)
-
 }

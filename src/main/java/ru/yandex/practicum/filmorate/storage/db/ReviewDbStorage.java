@@ -36,7 +36,6 @@ public class ReviewDbStorage implements ReviewStorage {
     @Override
     public Review getReviewById(int id) {
         String sql = "SELECT * FROM reviews WHERE review_id = ?";
-
         try {
             return jdbcTemplate.queryForObject(sql, this::getRowMapReview, id);
         } catch (RuntimeException e) {
@@ -175,7 +174,6 @@ public class ReviewDbStorage implements ReviewStorage {
     private Map<Integer, Map<Integer, Boolean>> getAllLikeForReviewMap() {
         String sql = "SELECT * FROM likes_review ORDER BY review_id ASC ";
         SqlRowSet rowSet = jdbcTemplate.queryForRowSet(sql);
-
         Map<Integer, Map<Integer, Boolean>> resultLikeForReview = new HashMap<>();
         Map<Integer, Boolean> reviewLikes = new HashMap<>();
         int lastReviewId = 0;
@@ -239,6 +237,4 @@ public class ReviewDbStorage implements ReviewStorage {
         }
         return count;
     }
-
-
 }
