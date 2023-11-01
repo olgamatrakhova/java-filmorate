@@ -76,19 +76,16 @@ public class FilmService {
         }
     }
 
-    public List<Film> getPopularFilmsByGenreAndYear(int limit, Optional<Long> genreId, Optional<Long> year) {
-        List<Film> films;
-
+    public List<Film> getPopularFilmsByGenreAndYear(int limit, Optional<Integer> genreId, Optional<Long> year) {
         if (genreId.isEmpty() && year.isEmpty()) {
-            films =  getPopularFilms(limit);
+            return  getPopularFilms(limit);
         } else if (genreId.isPresent() && year.isEmpty()) {
-            films =  filmStorage.getPopularFilmsByGenre(limit, genreId.get());
+            return  filmStorage.getPopularFilmsByGenre(limit, genreId.get());
         } else if (genreId.isEmpty()) {
-            films =  filmStorage.getPopularFilmsByYear(limit, year.get());
+            return  filmStorage.getPopularFilmsByYear(limit, year.get());
         } else {
-            films =  filmStorage.getPopularFilmsByGenreAndYear(limit, genreId.get(), year.get());
+            return  filmStorage.getPopularFilmsByGenreAndYear(limit, genreId.get(), year.get());
         }
-        return films;
     }
 
 }
