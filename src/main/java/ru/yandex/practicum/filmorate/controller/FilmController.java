@@ -2,7 +2,14 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
@@ -61,11 +68,5 @@ public class FilmController {
     public List<Film> getPopularFilms(@RequestParam(name = "count", defaultValue = "10") Integer count) {
         log.info("Запрос самых популярных фильмов в количестве: {} (getPopularFilms({}))", count, count);
         return filmService.getPopularFilms(count);
-    }
-
-    @GetMapping("/films/common")
-    public List<Film> commonFilms(@RequestParam(name = "userId") Integer userId, @RequestParam(name = "friendId") Integer friendId) {
-        log.info("Запрос общих фильмов для пользователя с id = {}, и пользователя с id = {}", userId, friendId);
-        return filmService.getCommonFilms(userId, friendId);
     }
 }
