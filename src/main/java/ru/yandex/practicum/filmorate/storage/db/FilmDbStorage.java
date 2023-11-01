@@ -365,7 +365,7 @@ public class FilmDbStorage implements FilmStorage {
         return getFilmsGenre(jdbcTemplate.query(sqlByTitle, this::getRowMapFilm, query.toLowerCase()));
     }
 
-    public List<Film> getPopularFilmsByGenre(int limit, long genreId) {
+    public List<Film> getPopularFilmsByGenre(int limit, Integer genreId) {
         String sql =
                 "SELECT f.*, m.name mpa_name " +
                 "FROM films f " +
@@ -394,7 +394,7 @@ public class FilmDbStorage implements FilmStorage {
         return getFilmsGenre(jdbcTemplate.query(sql, this::getRowMapFilm, year, limit));
     }
 
-    public List<Film> getPopularFilmsByGenreAndYear(int limit, long genreId, long year) {
+    public List<Film> getPopularFilmsByGenreAndYear(int limit, Integer genreId, long year) {
         String sql = "SELECT f.*, m.name mpa_name" +
                 "   FROM films f " +
                 "         LEFT JOIN likes l on f.film_id = l.film_id " +
