@@ -364,4 +364,47 @@ public class FilmDbStorage implements FilmStorage {
                 "       where lower(f.name) LIKE CONCAT('%', ?, '%')";
         return getFilmsGenre(jdbcTemplate.query(sqlByTitle, this::getRowMapFilm, query.toLowerCase()));
     }
+
+    public List<Film> getPopularFilmsByGenre(int limit, Integer genreId) {
+        String sql =
+                "SELECT f.*, m.name mpa_name " +
+                "FROM films f " +
+                "         LEFT JOIN mpa M ON f.mpa_id = m.mpa_id " +
+                "         LEFT JOIN likes l ON f.film_id = l.film_id " +
+                "WHERE f.film_id IN " +
+                "                    (SELECT film_id " +
+                "                     FROM film_genres " +
+                "                     WHERE genre_id = ?) " +
+                "GROUP BY f.film_id " +
+                "ORDER BY COUNT(l.user_id) DESC " +
+                "LIMIT ?";
+
+        return getFilmsGenre(jdbcTemplate.query(sql, this::getRowMapFilm, genreId, limit));
+    }
+
+    public List<Film> getPopularFilmsByYear(int limit, long year) {
+        String sql = "SELECT f.*, m.name mpa_name" +
+                "       FROM films f " +
+                "         LEFT JOIN mpa m ON f.mpa_id = m.mpa_id " +
+                "         LEFT JOIN likes l on f.film_id = l.film_id " +
+                "  WHERE EXTRACT(YEAR FROM f.release_dt) = ? " +
+                "  GROUP BY f.film_id " +
+                "  ORDER BY count(l.user_id) DESC " +
+                "  LIMIT ?";
+        return getFilmsGenre(jdbcTemplate.query(sql, this::getRowMapFilm, year, limit));
+    }
+
+    public List<Film> getPopularFilmsByGenreAndYear(int limit, Integer genreId, long year) {
+        String sql = "SELECT f.*, m.name mpa_name" +
+                "   FROM films f " +
+                "         LEFT JOIN likes l on f.film_id = l.film_id " +
+                "         LEFT JOIN mpa m ON f.mpa_id = m.mpa_id " +
+                "         LEFT JOIN film_genres g ON f.film_id = g.film_id " +
+                " WHERE g.genre_id = ? AND EXTRACT(YEAR FROM f.release_dt) = ? " +
+                " GROUP BY f.film_id " +
+                " ORDER BY count(L.USER_ID) DESC " +
+                " LIMIT ?";
+        return getFilmsGenre(jdbcTemplate.query(sql, this::getRowMapFilm, genreId, year, limit));
+    }
+
 }
