@@ -76,7 +76,7 @@ public class FilmService {
         }
     }
 
-    public List<Film> getPopularFilmsByGenreAndYear(int limit, Optional<Long> genreId, Optional<Long> year){
+    public List<Film> getPopularFilmsByGenreAndYear(int limit, Optional<Long> genreId, Optional<Long> year) {
         List<Film> films;
 
         if (genreId.isEmpty() && year.isEmpty()) {
