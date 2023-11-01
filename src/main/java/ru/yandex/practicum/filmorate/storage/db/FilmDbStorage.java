@@ -134,8 +134,12 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public void deleteFilmById(int id) {
-        String sql = "delete from films where film_id = ?";
-        if (jdbcTemplate.update(sql, id) == 0) {
+        String sqlDelLikes = "delete from likes where film_id = ?";
+        String sqlDelFilmGenre = "delete from film_genres where film_id = ?";
+        String sqlDelFilm = "delete from films where film_id = ?";
+        jdbcTemplate.update(sqlDelLikes, id);
+        jdbcTemplate.update(sqlDelFilmGenre, id);
+        if (jdbcTemplate.update(sqlDelFilm, id) == 0) {
             throw new NotFoundException("Невозможно удалить фильм с id = " + id);
         }
     }
@@ -145,7 +149,7 @@ public class FilmDbStorage implements FilmStorage {
         String sql = "select f.*, m.name mpa_name" +
                 "        from films f" +
                 "        join mpa m on m.mpa_id = f.mpa_id" +
-                "     order by f.rate desc" +
+                "     order by (select count(*) from likes l where l.film_id = f.film_id) desc" +
                 "     limit ?";
         return getFilmsGenre(jdbcTemplate.query(sql, this::getRowMapFilm, count));
     }
@@ -406,5 +410,4 @@ public class FilmDbStorage implements FilmStorage {
                 " LIMIT ?";
         return getFilmsGenre(jdbcTemplate.query(sql, this::getRowMapFilm, genreId, year, limit));
     }
-
 }

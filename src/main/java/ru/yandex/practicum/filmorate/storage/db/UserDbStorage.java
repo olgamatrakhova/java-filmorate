@@ -76,12 +76,20 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public void deleteUserById(int id) {
-        String sql = "delete from users where user_id = ?";
-        int userDel = jdbcTemplate.update(sql, id);
-        if (userDel == 0) throw new NotFoundException("Не возможно удалить пользователя с id = " + id);
+        String sqlDelFriends = "delete from friends where from_user_id = ? or to_user_id = ?";
+        String sqlDelLikes = "delete from likes where user_id = ?";
+        String sqlDelUser = "delete from users where user_id = ?";
+        jdbcTemplate.update(sqlDelLikes, id);
+        jdbcTemplate.update(sqlDelFriends, id, id);
+        if (jdbcTemplate.update(sqlDelUser, id) == 0)
+            throw new NotFoundException("Не возможно удалить пользователя с id = " + id);
     }
 
     public List<User> getFriends(int userId) {
+        User user = getUserById(userId);
+        if (user == null) {
+            throw new NotFoundException("Нет пользователя с таким id = " + userId);
+        }
         String sql = "select u.* from friends f join users u on u.user_id = f.to_user_id where f.from_user_id = ?";
         return jdbcTemplate.query(sql, this::getRowMapUser, userId);
     }
