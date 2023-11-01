@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.db;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.relational.core.sql.In;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
@@ -68,12 +67,14 @@ public class ReviewDbStorage implements ReviewStorage {
 
     @Override
     public boolean deleteReview(int id) {
-        String sql = "DELETE FROM reviews WHERE review_id = ?";
-        String sql1 = "DELETE FROM likes_review WHERE review_id = ?";
+        String sqlDeleteReview = "DELETE FROM reviews WHERE review_id = ?";
+        String sqlDeleteLikeForReview = "DELETE FROM likes_review WHERE review_id = ?";
         getReviewById(id);
         try {
-            jdbcTemplate.update(sql1, id);
-            jdbcTemplate.update(sql, id);
+            jdbcTemplate.update(sqlDeleteLikeForReview, id);
+            if (jdbcTemplate.update(sqlDeleteReview, id) == 0) {
+                throw new NotFoundException("Не удалось удалить отзыв " + id);
+            }
             return true;
         } catch (RuntimeException e) {
             throw new NotFoundException("Не найден указанный отзыв");
@@ -84,10 +85,10 @@ public class ReviewDbStorage implements ReviewStorage {
     public Review addLikeFromUser(int id, int userId) {
         getReviewById(id);
         String sql = "INSERT INTO likes_review (review_id, user_id, is_useful) VALUES (?, ?, ?)";
-        try
-        { jdbcTemplate.update(sql, id, userId, true);
+        try {
+            jdbcTemplate.update(sql, id, userId, true);
             jdbcTemplate.update("UPDATE reviews SET useful = useful + 1 WHERE review_id = ?", id);
-        } catch (RuntimeException e){
+        } catch (RuntimeException e) {
             throw new NotFoundException("Не удалось поставить лайк от пользователя id = " + userId + ", для отзыва с id = " + id);
         }
         return getReviewById(id);
@@ -110,7 +111,9 @@ public class ReviewDbStorage implements ReviewStorage {
         String sqlDelete = "DELETE FROM likes_review WHERE review_id = ? AND user_id = ? AND is_useful = true LIMIT 1  ";
         String sqlUpdateUseful = "UPDATE reviews SET useful = ? WHERE review_id = ?";
         try {
-            jdbcTemplate.update(sqlDelete, id, userId);
+            if (jdbcTemplate.update(sqlDelete, id, userId) == 0) {
+                throw new NotFoundException("Не удалось удалить лайк пользователя " + userId + " для фильма " + id);
+            }
             int count = getUsefulCount(id, userId);
             jdbcTemplate.update(sqlUpdateUseful, count, id);
         } catch (RuntimeException e) {
@@ -121,9 +124,13 @@ public class ReviewDbStorage implements ReviewStorage {
 
     @Override
     public Review deleteDislikeFromUser(int id, int userId) {
-        String sql = "DELETE FROM likes_review WHERE review_id = ? AND user_id = ? AND is_useful = false LIMIT 1  ";
-        try { jdbcTemplate.update(sql, id, userId);
-            jdbcTemplate.update("UPDATE reviews SET useful = useful + 1 WHERE review_id = ?", id);
+        String sqlDelete = "DELETE FROM likes_review WHERE review_id = ? AND user_id = ? AND is_useful = false LIMIT 1  ";
+        String sqlUpdateUseful = "UPDATE reviews SET useful = useful + 1 WHERE review_id = ?";
+        try {
+            if (jdbcTemplate.update(sqlDelete, id, userId) == 0) {
+                throw new NotFoundException("Не удалось удалить дислайк пользователя " + userId + " для фильма " + id);
+            }
+            jdbcTemplate.update(sqlUpdateUseful, id);
         } catch (RuntimeException e) {
             throw new NotFoundException("Не найдено дизлайка от пользователя id = " + userId + ", для отзыва с id = " + id);
         }
@@ -165,7 +172,7 @@ public class ReviewDbStorage implements ReviewStorage {
         return result;
     }
 
-    private Map<Integer, Map<Integer, Boolean>> getAllLikeForReviewMap (){
+    private Map<Integer, Map<Integer, Boolean>> getAllLikeForReviewMap() {
         String sql = "SELECT * FROM likes_review ORDER BY review_id ASC ";
         SqlRowSet rowSet = jdbcTemplate.queryForRowSet(sql);
 
@@ -174,17 +181,17 @@ public class ReviewDbStorage implements ReviewStorage {
         int lastReviewId = 0;
 
         while (rowSet.next()) {
-            int review_id = rowSet.getInt("review_id");
+            int reviewId = rowSet.getInt("review_id");
             int userId = rowSet.getInt("user_id");
             boolean useful = rowSet.getBoolean("is_useful");
 
             if (lastReviewId == 0) {
-                lastReviewId = review_id;
+                lastReviewId = reviewId;
             }
-            if (lastReviewId != review_id) {
+            if (lastReviewId != reviewId) {
                 resultLikeForReview.put(lastReviewId, reviewLikes);
                 reviewLikes = new HashMap<>();
-                lastReviewId = review_id;
+                lastReviewId = reviewId;
             }
             reviewLikes.put(userId, useful);
         }
@@ -219,7 +226,7 @@ public class ReviewDbStorage implements ReviewStorage {
         }
     }
 
-    private int getUsefulCount(int id, int userId){
+    private int getUsefulCount(int id, int userId) {
         String sql = "SELECT * FROM likes_review WHERE review_id = ? AND user_id = ? ";
         SqlRowSet rs = jdbcTemplate.queryForRowSet(sql, id, userId);
         int count = 0;
