@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.feed.Event;
 import ru.yandex.practicum.filmorate.model.feed.EventOperation;
 import ru.yandex.practicum.filmorate.model.feed.EventType;
-import ru.yandex.practicum.filmorate.storage.EventStorage;
+import ru.yandex.practicum.filmorate.storage.db.EventDbStorage;
 
 import java.time.Instant;
 import java.util.List;
@@ -13,8 +13,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class EventService {
-
-    private final EventStorage eventDbStorage;
+    private final EventDbStorage eventDbStorage;
 
     public List<Event> getFeed(int userId) {
         return eventDbStorage.getFeed(userId);

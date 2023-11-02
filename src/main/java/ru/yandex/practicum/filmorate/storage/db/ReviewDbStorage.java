@@ -15,7 +15,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
 @Component("ReviewDbStorage")
 @RequiredArgsConstructor
 public class ReviewDbStorage implements ReviewStorage {
@@ -177,12 +176,10 @@ public class ReviewDbStorage implements ReviewStorage {
         Map<Integer, Map<Integer, Boolean>> resultLikeForReview = new HashMap<>();
         Map<Integer, Boolean> reviewLikes = new HashMap<>();
         int lastReviewId = 0;
-
         while (rowSet.next()) {
             int reviewId = rowSet.getInt("review_id");
             int userId = rowSet.getInt("user_id");
             boolean useful = rowSet.getBoolean("is_useful");
-
             if (lastReviewId == 0) {
                 lastReviewId = reviewId;
             }
@@ -201,7 +198,6 @@ public class ReviewDbStorage implements ReviewStorage {
         String sql1 = "SELECT * FROM likes_review WHERE review_id = ?";
         SqlRowSet rowSet = jdbcTemplate.queryForRowSet(sql1, id);
         Map<Integer, Boolean> result = new HashMap<>();
-
         while (rowSet.next()) {
             int userId = rowSet.getInt("user_id");
             boolean useful = rowSet.getBoolean("is_useful");

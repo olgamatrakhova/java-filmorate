@@ -156,24 +156,18 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public List<Film> getCommonFilms(int userId, int friendId) {
-        String sql = "SELECT f.*, m.name AS mpa_name " +
-                " FROM (SELECT FILM_ID " +
-                " FROM (	SELECT * " +
-                "FROM LIKES AS l " +
-                " WHERE l.USER_ID = ? " +
-                " UNION " +
-                " SELECT * " +
-                " FROM LIKES AS l2 " +
-                " WHERE l2.USER_ID = ? " +
-                " ) AS c " +
-                " GROUP BY c.FILM_ID " +
-                " HAVING COUNT(FILM_ID) = 2) AS c " +
-                " LEFT JOIN FILMS AS f ON c.film_id = f.FILM_ID " +
-                " LEFT JOIN  MPA AS m ON f.MPA_ID = m.MPA_ID " +
-                " LEFT JOIN LIKES AS l3 ON f.film_id = l3.FILM_ID " +
-                " GROUP BY l3.FILM_ID " +
-                " ORDER BY COUNT(USER_ID) DESC ";
-
+        String sql = "SELECT f.*, m.name AS mpa_name\n" +
+                "       FROM (SELECT FILM_ID\n" +
+                "               FROM (SELECT * FROM LIKES AS l WHERE l.USER_ID = ?\n" +
+                "                     UNION\n" +
+                "                     SELECT * FROM LIKES AS l2 WHERE l2.USER_ID = ?) AS c\n" +
+                "             GROUP BY c.FILM_ID\n" +
+                "             HAVING COUNT(FILM_ID) = 2) AS c\n" +
+                "       LEFT JOIN FILMS AS f ON c.film_id = f.FILM_ID\n" +
+                "       LEFT JOIN  MPA AS m ON f.MPA_ID = m.MPA_ID\n" +
+                "       LEFT JOIN LIKES AS l3 ON f.film_id = l3.FILM_ID\n" +
+                "     GROUP BY l3.FILM_ID\n" +
+                "     ORDER BY COUNT(USER_ID) DESC";
         return getFilmsGenre(jdbcTemplate.query(sql, this::getRowMapFilm, userId, friendId));
     }
 
@@ -326,13 +320,12 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     public List<Film> getDirectorFilmsSort(int directorId, String sortBy) {
-        String sql = "select f.*," +
-                "                m.name mpa_name" +
-                "            from films f" +
-                "            join mpa m on m.mpa_id = f.mpa_id" +
-                "           where film_id in (select film_id" +
-                "                               from film_directors" +
-                "                              where director_id = ?) ";
+        String sql = "select f.*, m.name mpa_name\n" +
+                "       from films f\n" +
+                "       join mpa m on m.mpa_id = f.mpa_id\n" +
+                "      where film_id in (select film_id\n" +
+                "                          from film_directors\n" +
+                "                         where director_id = ?)";
         List<Film> filmSort;
         if (sortBy.equals("year")) {
             sql += "order by f.release_dt";
@@ -351,63 +344,61 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     public List<Film> searchByDirector(String query) {
-        String sqlByDirector = "select f.*, m.name mpa_name" +
-                "       from films f" +
-                "       join mpa m on m.mpa_id = f.mpa_id" +
-                "       where f.film_id in (select fd.film_id" +
-                "                           from film_directors fd" +
-                "                           join directors d on d.director_id = fd.director_id" +
-                "                           where lower(d.name) LIKE CONCAT('%', ? ,'%'))";
+        String sqlByDirector = "select f.*, m.name mpa_name\n" +
+                "                 from films f\n" +
+                "                 join mpa m on m.mpa_id = f.mpa_id\n" +
+                "                where f.film_id in (select fd.film_id\n" +
+                "                                      from film_directors fd\n" +
+                "                                      join directors d on d.director_id = fd.director_id\n" +
+                "                                     where lower(d.name) LIKE CONCAT('%', ? ,'%'))";
         return getFilmsGenre(jdbcTemplate.query(sqlByDirector, this::getRowMapFilm, query.toLowerCase()));
     }
 
     public List<Film> searchByTitle(String query) {
-        String sqlByTitle = "select f.*, m.name mpa_name" +
-                "       from films f" +
-                "       join mpa m on m.mpa_id = f.mpa_id" +
-                "       where lower(f.name) LIKE CONCAT('%', ?, '%')";
+        String sqlByTitle = "select f.*, m.name mpa_name\n" +
+                "              from films f\n" +
+                "              join mpa m on m.mpa_id = f.mpa_id\n" +
+                "             where lower(f.name) LIKE CONCAT('%', ?, '%')";
         return getFilmsGenre(jdbcTemplate.query(sqlByTitle, this::getRowMapFilm, query.toLowerCase()));
     }
 
     public List<Film> getPopularFilmsByGenre(int limit, Integer genreId) {
-        String sql =
-                "SELECT f.*, m.name mpa_name " +
-                "FROM films f " +
-                "         LEFT JOIN mpa M ON f.mpa_id = m.mpa_id " +
-                "         LEFT JOIN likes l ON f.film_id = l.film_id " +
-                "WHERE f.film_id IN " +
-                "                    (SELECT film_id " +
-                "                     FROM film_genres " +
-                "                     WHERE genre_id = ?) " +
-                "GROUP BY f.film_id " +
-                "ORDER BY COUNT(l.user_id) DESC " +
-                "LIMIT ?";
-
+        String sql = "SELECT f.*, m.name mpa_name\n" +
+                "       FROM films f\n" +
+                "       LEFT JOIN mpa M ON f.mpa_id = m.mpa_id\n" +
+                "       LEFT JOIN likes l ON f.film_id = l.film_id\n" +
+                "      WHERE f.film_id IN (SELECT film_id\n" +
+                "                            FROM film_genres\n" +
+                "                           WHERE genre_id = ?)\n" +
+                "     GROUP BY f.film_id\n" +
+                "     ORDER BY COUNT(l.user_id) DESC\n" +
+                "     LIMIT ?";
         return getFilmsGenre(jdbcTemplate.query(sql, this::getRowMapFilm, genreId, limit));
     }
 
     public List<Film> getPopularFilmsByYear(int limit, long year) {
-        String sql = "SELECT f.*, m.name mpa_name" +
-                "       FROM films f " +
-                "         LEFT JOIN mpa m ON f.mpa_id = m.mpa_id " +
-                "         LEFT JOIN likes l on f.film_id = l.film_id " +
-                "  WHERE EXTRACT(YEAR FROM f.release_dt) = ? " +
-                "  GROUP BY f.film_id " +
-                "  ORDER BY count(l.user_id) DESC " +
-                "  LIMIT ?";
+        String sql = "SELECT f.*, m.name mpa_name\n" +
+                "       FROM films f\n" +
+                "       LEFT JOIN mpa m ON f.mpa_id = m.mpa_id\n" +
+                "       LEFT JOIN likes l on f.film_id = l.film_id\n" +
+                "      WHERE EXTRACT(YEAR FROM f.release_dt) = ?\n" +
+                "     GROUP BY f.film_id\n" +
+                "     ORDER BY count(l.user_id) DESC\n" +
+                "     LIMIT ?";
         return getFilmsGenre(jdbcTemplate.query(sql, this::getRowMapFilm, year, limit));
     }
 
     public List<Film> getPopularFilmsByGenreAndYear(int limit, Integer genreId, long year) {
-        String sql = "SELECT f.*, m.name mpa_name" +
-                "   FROM films f " +
-                "         LEFT JOIN likes l on f.film_id = l.film_id " +
-                "         LEFT JOIN mpa m ON f.mpa_id = m.mpa_id " +
-                "         LEFT JOIN film_genres g ON f.film_id = g.film_id " +
-                " WHERE g.genre_id = ? AND EXTRACT(YEAR FROM f.release_dt) = ? " +
-                " GROUP BY f.film_id " +
-                " ORDER BY count(L.USER_ID) DESC " +
-                " LIMIT ?";
+        String sql = "SELECT f.*, m.name mpa_name\n" +
+                "       FROM films f\n" +
+                "       LEFT JOIN likes l on f.film_id = l.film_id\n" +
+                "       LEFT JOIN mpa m ON f.mpa_id = m.mpa_id\n" +
+                "       LEFT JOIN film_genres g ON f.film_id = g.film_id\n" +
+                "      WHERE g.genre_id = ?\n" +
+                "        AND EXTRACT(YEAR FROM f.release_dt) = ?\n" +
+                "     GROUP BY f.film_id\n" +
+                "     ORDER BY count(L.USER_ID) DESC\n" +
+                "     LIMIT ?";
         return getFilmsGenre(jdbcTemplate.query(sql, this::getRowMapFilm, genreId, year, limit));
     }
 }

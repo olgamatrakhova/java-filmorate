@@ -61,27 +61,25 @@ public class FilmController {
 
     @GetMapping("/films/common")
     public List<Film> commonFilms(@RequestParam(name = "userId") Integer userId, @RequestParam(name = "friendId") Integer friendId) {
-        log.info("Запрос общих фильмов для пользователя с id = {}, и пользователя с id = {}", userId, friendId);
+        log.info("Запрос общих фильмов для пользователя с id = {}, и пользователя с id = {} (commonFilms({}, {}))", userId, friendId, userId, friendId);
         return filmService.getCommonFilms(userId, friendId);
     }
 
     @GetMapping("/films/director/{directorId}")
     public List<Film> getDirectorFilmsSort(@PathVariable("directorId") @Min(1) int directorId, @RequestParam(value = "sortBy", defaultValue = "likes") String sortBy) {
-        log.info("Запрос ны вывод всех фильмов режиссера с id = {}, отсортированных по sort = {}", directorId, sortBy);
+        log.info("Запрос ны вывод всех фильмов режиссера с id = {}, отсортированных по sort = {} (getDirectorFilmsSort({}, {}))", directorId, sortBy, directorId, sortBy);
         return filmService.getDirectorFilmsSort(directorId, sortBy);
     }
 
     @GetMapping("/films/search")
     public List<Film> searchFilms(@RequestParam String query, @RequestParam List<String> by) {
-        log.info("Поиск фильмов по запросу: \"{}\"", query);
+        log.info("Запрос на поиск фильма по фразе: \"{}\" (searchFilm(\"{}\")", query, query);
         return filmService.searchFilms(query, by);
     }
 
     @GetMapping("/films/popular")
-    public List<Film> getPopularFilmsByGenreAndYear(@RequestParam(defaultValue = "10") int count,
-                                                    @RequestParam Optional<Integer> genreId,
-                                                    @RequestParam Optional<Long> year) {
-        log.info("Запрос на получение топ {} Film c GenreId {} за год {}", count, genreId, year);
+    public List<Film> getPopularFilmsByGenreAndYear(@RequestParam(defaultValue = "10") int count, @RequestParam Optional<Integer> genreId, @RequestParam Optional<Long> year) {
+        log.info("Запрос на получение топ {} фильмов c жанром {} за год {} (getPopularFilmsByGenreAndYear({}, {}, {}))", count, genreId, year, count, genreId, year);
         return filmService.getPopularFilmsByGenreAndYear(count, genreId, year);
     }
 }

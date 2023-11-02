@@ -31,7 +31,7 @@ public class ReviewService {
     }
 
     public Review addReview(Review review) {
-        Review reviewCreated =  reviewStorage.addReview(checkReview(review));
+        Review reviewCreated = reviewStorage.addReview(checkReview(review));
         eventService.createEvent(reviewCreated.getUserId(), EventType.REVIEW, EventOperation.ADD, reviewCreated.getReviewId());
         return reviewCreated;
     }
@@ -74,5 +74,4 @@ public class ReviewService {
         }
         return review;
     }
-
 }

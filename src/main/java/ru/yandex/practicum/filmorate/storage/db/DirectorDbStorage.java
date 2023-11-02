@@ -34,7 +34,7 @@ public class DirectorDbStorage implements DirectorStorage {
 
     @Override
     public Director addDirector(Director director) {
-        String sql = "insert into directors(name) values (?)";
+        String sql = "insert into directors(name) values(?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(con -> {
             PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);

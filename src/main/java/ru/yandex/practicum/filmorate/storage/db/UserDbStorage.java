@@ -127,7 +127,6 @@ public class UserDbStorage implements UserStorage {
                 "                           left join friends f2 on f1.to_user_id = f2.to_user_id" +
                 "                          where f1.from_user_id = ?" +
                 "                            and f2.from_user_id = ?)";
-
         return jdbcTemplate.query(sql, this::getRowMapUser, userId, otherId);
     }
 }
