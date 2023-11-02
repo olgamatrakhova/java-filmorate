@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Review;
+import ru.yandex.practicum.filmorate.model.feed.EventOperation;
+import ru.yandex.practicum.filmorate.model.feed.EventType;
 import ru.yandex.practicum.filmorate.storage.ReviewStorage;
 
 import java.util.List;
@@ -14,6 +16,7 @@ import java.util.List;
 public class ReviewService {
     @Qualifier("ReviewDbStorage")
     private final ReviewStorage reviewStorage;
+    private final EventService eventService;
 
     public List<Review> getAllReview() {
         return reviewStorage.getAllReview();
@@ -28,15 +31,22 @@ public class ReviewService {
     }
 
     public Review addReview(Review review) {
-        return reviewStorage.addReview(checkReview(review));
+        Review reviewCreated =  reviewStorage.addReview(checkReview(review));
+        eventService.createEvent(reviewCreated.getUserId(), EventType.REVIEW, EventOperation.ADD, reviewCreated.getReviewId());
+        return reviewCreated;
     }
 
     public Review updateReview(Review review) {
-        return reviewStorage.updateReview(checkReview(review));
+        Review reviewUpdated = reviewStorage.updateReview(checkReview(review));
+        eventService.createEvent(reviewUpdated.getUserId(), EventType.REVIEW, EventOperation.UPDATE, reviewUpdated.getReviewId());
+        return reviewUpdated;
     }
 
     public boolean deleteReview(int id) {
-        return reviewStorage.deleteReview(id);
+        Review review = getReviewById(id);
+        boolean reviewResult = reviewStorage.deleteReview(id);
+        eventService.createEvent(review.getUserId(), EventType.REVIEW, EventOperation.REMOVE, review.getReviewId());
+        return reviewResult;
     }
 
     public Review addLikeReviewFromUser(int id, int userId) {
