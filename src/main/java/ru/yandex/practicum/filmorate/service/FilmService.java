@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.feed.EventOperation;
+import ru.yandex.practicum.filmorate.model.feed.EventType;
 import ru.yandex.practicum.filmorate.storage.db.FilmDbStorage;
 
 import java.util.List;
@@ -15,6 +17,7 @@ import java.util.Optional;
 public class FilmService {
     @Qualifier("filmDbStorage")
     private final FilmDbStorage filmStorage;
+    private final EventService eventService;
 
     public List<Film> getFilms() {
         return filmStorage.getFilms();
@@ -38,10 +41,12 @@ public class FilmService {
 
     public void setLikeFilm(int filmId, int userId) {
         filmStorage.setLikeFilm(filmId, userId);
+        eventService.createEvent(userId, EventType.LIKE, EventOperation.ADD, filmId);
     }
 
     public void unsetLikeFilm(int filmId, int userId) {
         filmStorage.unsetLikeFilm(filmId, userId);
+        eventService.createEvent(userId, EventType.LIKE, EventOperation.REMOVE, filmId);
     }
 
     public List<Film> getPopularFilms(int count) {

@@ -6,6 +6,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.feed.Event;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import javax.validation.Valid;
@@ -79,4 +80,9 @@ public class UserController {
         return userService.getRecommendations(id);
     }
 
+    @GetMapping("/users/{id}/feed")
+    public List<Event> getFeed(@PathVariable("id") Integer id) {
+        log.info("Получен запрос на получение ленты событий User c ID {}", id);
+        return userService.getFeed(id);
+    }
 }
