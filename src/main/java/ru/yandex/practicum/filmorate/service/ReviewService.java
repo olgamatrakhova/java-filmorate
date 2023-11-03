@@ -3,8 +3,7 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.exception.ReviewValidationException;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.model.feed.EventOperation;
 import ru.yandex.practicum.filmorate.model.feed.EventType;
@@ -70,7 +69,7 @@ public class ReviewService {
                 || (review.getContent() == null) || (review.getIsPositive() == null)
                 || (review.getUserId() < 0) || (review.getFilmId() < 0)
                 || (review.getReviewId() == null)) {
-            throw new NotFoundException("Необходимо правильно заполнить отзыв");
+            throw new ReviewValidationException("Необходимо правильно заполнить отзыв");
         }
         return review;
     }
