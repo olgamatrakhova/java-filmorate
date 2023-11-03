@@ -73,7 +73,7 @@ public class DirectorDbStorage implements DirectorStorage {
             throw new NotFoundException("Невозможно удалить режиссера с id = " + id);
         }
         if (jdbcTemplate.update(sql2, id) == 0) {
-            throw new NotFoundException("Невозможно удалить фильм с id = " + id);
+            throw new NotFoundException("Невозможно удалить режиссера с id = " + id);
         }
     }
 }

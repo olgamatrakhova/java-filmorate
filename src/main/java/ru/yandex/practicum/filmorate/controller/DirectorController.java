@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -37,7 +36,7 @@ public class DirectorController {
     }
 
     @PostMapping()
-    public Director addDirector(@Valid @RequestBody @NonNull Director director) {
+    public Director addDirector(@Valid @RequestBody Director director) {
         log.info("Запрос на добавление режиссера (addDirector({}))", director);
         return directorService.addDirector(director);
     }
