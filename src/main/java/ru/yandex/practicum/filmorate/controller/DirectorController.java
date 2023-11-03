@@ -37,7 +37,7 @@ public class DirectorController {
     }
 
     @PostMapping()
-    public Director addDirector(@Valid @RequestBody @NonNull Director director) {
+    public Director addDirector(@Valid @RequestBody Director director) {
         log.info("Запрос на добавление режиссера (addDirector({}))", director);
         return directorService.addDirector(director);
     }

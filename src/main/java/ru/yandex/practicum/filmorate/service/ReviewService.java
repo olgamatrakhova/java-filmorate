@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.model.feed.EventOperation;
 import ru.yandex.practicum.filmorate.model.feed.EventType;
@@ -42,11 +43,10 @@ public class ReviewService {
         return reviewUpdated;
     }
 
-    public boolean deleteReview(int id) {
+    public void deleteReview(int id) {
         Review review = getReviewById(id);
         boolean reviewResult = reviewStorage.deleteReview(id);
         eventService.createEvent(review.getUserId(), EventType.REVIEW, EventOperation.REMOVE, review.getReviewId());
-        return reviewResult;
     }
 
     public Review addLikeReviewFromUser(int id, int userId) {

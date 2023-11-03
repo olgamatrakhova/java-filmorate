@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
@@ -18,6 +20,7 @@ import ru.yandex.practicum.filmorate.service.ReviewService;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -27,8 +30,9 @@ public class ReviewController {
     private final ReviewService reviewService;
 
     @GetMapping
-    public List<Review> getReviewByFilmId(@RequestParam(name = "filmId", defaultValue = "-1") int filmId, @RequestParam(name = "count", defaultValue = "10") int count) {
-        if (filmId == -1) {
+    public List<Review> getReviewByFilmId(@RequestParam(name = "filmId") Optional<Integer> filmId,
+                                          @RequestParam(name = "count", defaultValue = "10") int count) {
+        if (filmId.isEmpty()) {
             log.info("Запрос на получение списка всех отзывов (getReviewByFilmId())");
             return reviewService.getAllReview();
         }
@@ -36,7 +40,7 @@ public class ReviewController {
             throw new ValidationException("Количество запрашиваемых отзывов не может быть отрицательным");
         }
         log.info("Запрос на получение списка отзывов на фильм с id = {} getReviewByFilmId({})", filmId, filmId);
-        return reviewService.getReviewByFilmId(filmId, count);
+        return reviewService.getReviewByFilmId(filmId.get(), count);
     }
 
     @GetMapping("/{id}")
@@ -58,9 +62,10 @@ public class ReviewController {
     }
 
     @DeleteMapping("/{id}")
-    public boolean deleteReview(@PathVariable int id) throws NotFoundException {
+    @ResponseStatus(value = HttpStatus.NO_CONTENT)
+    public void deleteReview(@PathVariable int id) throws NotFoundException {
         log.info("Запрос на удаление отзыва с id = {} (deleteReview({}))", id, id);
-        return reviewService.deleteReview(id);
+        reviewService.deleteReview(id);
     }
 
     @PutMapping("/{id}/like/{userId}")
