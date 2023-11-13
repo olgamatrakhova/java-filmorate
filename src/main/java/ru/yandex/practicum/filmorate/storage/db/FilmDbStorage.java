@@ -25,6 +25,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,7 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Component("filmDbStorage")
 @RequiredArgsConstructor
@@ -50,17 +50,20 @@ public class FilmDbStorage implements FilmStorage {
                 .duration(rs.getInt("duration"))
                 .genres(null)
                 .rate(rs.getInt("rate"))
+                .rateByMarks(Double.parseDouble(new DecimalFormat("#0.00").format(rs.getDouble("rate_by_marks"))))
                 .mpa(new Mpa(rs.getInt("mpa_id"), rs.getString("mpa_name")))
                 .directors(null)
                 .build();
     }
 
     private FilmGenre getRowMapFilmGenre(ResultSet rs, int rowNum) throws SQLException {
-        return new FilmGenre(rs.getInt("film_id"), new Genre(rs.getInt("genre_id"), rs.getString("name")));
+        return new FilmGenre(rs.getInt("film_id"), new Genre(rs.getInt("genre_id"),
+                rs.getString("name")));
     }
 
     private FilmDirector getRowMapFilmDirector(ResultSet rs, int rowNum) throws SQLException {
-        return new FilmDirector(rs.getInt("film_id"), new Director(rs.getInt("director_id"), rs.getString("name")));
+        return new FilmDirector(rs.getInt("film_id"), new Director(rs.getInt("director_id"),
+                rs.getString("name")));
     }
 
     @Override
@@ -73,7 +76,8 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Film addFilm(Film film) {
-        String sql = "insert into films(name, description, release_dt, duration, rate,mpa_id) values(?, ?, ?, ?, ?, ?)";
+        String sql = "insert into films(name, description, release_dt, duration, rate, rate_by_marks, mpa_id) " +
+                "values(?, ?, ?, ?, ?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(con -> {
             PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
@@ -82,7 +86,8 @@ public class FilmDbStorage implements FilmStorage {
             ps.setDate(3, Date.valueOf(film.getReleaseDate()));
             ps.setInt(4, film.getDuration());
             ps.setInt(5, film.getRate());
-            ps.setInt(6, film.getMpa().getId());
+            ps.setInt(6, 0);
+            ps.setInt(7, film.getMpa().getId());
             return ps;
         }, keyHolder);
         int filmId = Objects.requireNonNull(keyHolder.getKey()).intValue();
@@ -301,6 +306,23 @@ public class FilmDbStorage implements FilmStorage {
         return likedFilms;
     }
 
+    public Map<Integer, Map<Integer, Integer>> getAllMarkedFilms() {
+        String sql = "SELECT user_id, film_id, mark FROM marks";
+        Map<Integer, Map<Integer, Integer>> ratedFilms = new HashMap<>();
+        jdbcTemplate.query(sql, (rs, rowNum) -> {
+            Integer userId = rs.getInt("user_id");
+            if (!ratedFilms.containsKey(userId)) {
+                Map<Integer, Integer> userRates = new HashMap<>();
+                userRates.put(rs.getInt("film_id"), rs.getInt("mark"));
+                ratedFilms.put(userId, userRates);
+            } else {
+                ratedFilms.get(userId).put(rs.getInt("film_id"), rs.getInt("mark"));
+            }
+            return ratedFilms;
+        });
+        return ratedFilms;
+    }
+
     public List<Integer> getFilmsIdLikedByUser(Integer userId) {
         String sql = "SELECT user_id, film_id FROM likes WHERE user_id = ?";
         return jdbcTemplate.query(sql, (rs, rowNum) -> rs.getInt("film_id"), userId);
@@ -313,10 +335,17 @@ public class FilmDbStorage implements FilmStorage {
                 "     where f.film_id in (:filmsId)" +
                 "     order by f.rate desc";
         SqlParameterSource parameters = new MapSqlParameterSource("filmsId", recommendedFilmIds);
-        List<Film> recommendedFilms = getFilmsGenre(namedJdbcTemplate.query(sql, parameters, this::getRowMapFilm));
-        return recommendedFilms.stream()
-                .peek(f -> setUsersLikes(f.getId(), f))
-                .collect(Collectors.toList());
+        return getFilmsGenre(namedJdbcTemplate.query(sql, parameters, this::getRowMapFilm));
+    }
+
+    public List<Film> getRecommendationsByMarks(List<Integer> recommendedFilmIds) {
+        String sql = "select f.*, m.name mpa_name" +
+                "        from films f" +
+                "        join mpa m on m.mpa_id = f.mpa_id" +
+                "     where (f.film_id in (:filmsId)) and (f.rate_by_marks > 5)" +
+                "     order by f.rate_by_marks desc";
+        SqlParameterSource parameters = new MapSqlParameterSource("filmsId", recommendedFilmIds);
+        return getFilmsGenre(namedJdbcTemplate.query(sql, parameters, this::getRowMapFilm));
     }
 
     public List<Film> getDirectorFilmsSort(int directorId, String sortBy) {
@@ -400,5 +429,72 @@ public class FilmDbStorage implements FilmStorage {
                 "     ORDER BY count(L.USER_ID) DESC\n" +
                 "     LIMIT ?";
         return getFilmsGenre(jdbcTemplate.query(sql, this::getRowMapFilm, genreId, year, limit));
+    }
+
+    public List<Film> getPopularMarkedFilmsByGenre(int limit, Integer genreId) {
+        String sql = "SELECT f.*, m.name mpa_name\n" +
+                "       FROM films f\n" +
+                "       LEFT JOIN mpa m ON f.mpa_id = m.mpa_id\n" +
+                "      WHERE f.film_id IN (SELECT film_id\n" +
+                "                            FROM film_genres\n" +
+                "                            WHERE genre_id = ?)\n" +
+                "     ORDER BY f.rate_by_marks DESC\n" +
+                "     LIMIT ?";
+        return getFilmsGenre(jdbcTemplate.query(sql, this::getRowMapFilm, genreId, limit));
+    }
+
+    public List<Film> getPopularMarkedFilmsByYear(int limit, long year) {
+        String sql = "SELECT f.*, m.name mpa_name\n" +
+                "       FROM films f\n" +
+                "       LEFT JOIN mpa m ON f.mpa_id = m.mpa_id\n" +
+                "      WHERE EXTRACT(YEAR FROM f.release_dt) = ?\n" +
+                "     ORDER BY f.rate_by_marks DESC\n" +
+                "     LIMIT ?";
+        return getFilmsGenre(jdbcTemplate.query(sql, this::getRowMapFilm, year, limit));
+    }
+
+    public List<Film> getPopularMarkedFilmsByGenreAndYear(int limit, Integer genreId, long year) {
+        String sql = "SELECT f.*, m.name mpa_name\n" +
+                "       FROM films f\n" +
+                "       LEFT JOIN mpa m ON f.mpa_id = m.mpa_id\n" +
+                "       LEFT JOIN film_genres g ON f.film_id = g.film_id\n" +
+                "      WHERE g.genre_id = ? AND EXTRACT(YEAR FROM f.release_dt) = ?\n" +
+                "     GROUP BY f.film_id\n" +
+                "     ORDER BY f.rate_by_marks DESC\n" +
+                "     LIMIT ?";
+        return getFilmsGenre(jdbcTemplate.query(sql, this::getRowMapFilm, genreId, year, limit));
+    }
+
+    public void markFilm(Integer filmId, Integer userId, int mark) {
+        String sqlIns = "INSERT into marks(film_id, user_id, mark) VALUES(?, ?, ?)";
+        String sqlGetAverageMark = "SELECT AVG(marks.mark) FROM marks WHERE film_id = ?";
+        String sqlUpd = "UPDATE films SET rate_by_marks = ? WHERE films.film_id = ?";
+        jdbcTemplate.update(sqlIns, filmId, userId, mark);
+        Double averageMark = jdbcTemplate.queryForObject(sqlGetAverageMark, Double.class, filmId);
+        jdbcTemplate.update(sqlUpd, averageMark, filmId);
+    }
+
+    public List<Film> getDirectorFilmsSortByMark(int directorId, String sortBy) {
+        String sql = "select f.*, m.name mpa_name\n" +
+                "       from films f\n" +
+                "       join mpa m on m.mpa_id = f.mpa_id\n" +
+                "      where film_id in (select film_id\n" +
+                "                          from film_directors\n" +
+                "                         where director_id = ?)";
+        List<Film> filmSort;
+        if (sortBy.equals("year")) {
+            sql += "order by f.release_dt";
+            filmSort = jdbcTemplate.query(sql, this::getRowMapFilm, directorId);
+        } else if (sortBy.equals("marks")) {
+            sql += "order by f.rate_by_marks desc";
+            filmSort = jdbcTemplate.query(sql, this::getRowMapFilm, directorId);
+        } else {
+            throw new NotFoundException("Ошибка формата сортировки. SortBy = " + sortBy + " не существует");
+        }
+        if (filmSort.isEmpty()) {
+            throw new NotFoundException("Нет фильмов по режиссеру c id = " + directorId);
+        }
+        filmSort = getFilmsGenre(filmSort);
+        return filmSort;
     }
 }

@@ -29,6 +29,7 @@ public class Film {
     private int duration;
     private Set<Integer> likes;
     private int rate;
+    private double rateByMarks;
     private List<Genre> genres;
     @NonNull
     private Mpa mpa;

@@ -12,8 +12,11 @@ import ru.yandex.practicum.filmorate.storage.db.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.db.UserDbStorage;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -86,6 +89,57 @@ public class UserService {
             recommendedFilmIds.removeAll(filmsLikedByUser);
         }
         return filmStorage.getRecommendations(recommendedFilmIds);
+    }
+
+    public List<Film> getRecommendationsByMarks(Integer userId) {
+        Map<Integer, Map<Integer,Integer>> allMarkedFilms = filmStorage.getAllMarkedFilms();
+        Map<Integer,Integer> userRatings = allMarkedFilms.get(userId);
+        Map<Integer, Integer> similarityScores = new HashMap<>();
+
+        for (Map.Entry<Integer, Map<Integer, Integer>> entry : allMarkedFilms.entrySet()) {
+            int otherUser = entry.getKey();
+            if (otherUser != userId) {
+                Map<Integer, Integer> otherUserRatings = entry.getValue();
+                int similarityScore = calculateSimilarity(userRatings, otherUserRatings);
+                similarityScores.put(otherUser, similarityScore);
+            }
+        }
+
+        int usersToRecommend = 1; // кол-во пользователей с похожими оценками, на основе которых даются рекомендации
+        List<Integer> similarUsers = similarityScores.entrySet().stream() // пользователи отсортированы по убыванию схожести
+                .sorted(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey)
+                .limit(usersToRecommend)
+                .collect(Collectors.toList());
+
+        Set<Integer> moviesOfSimilarUsers = getMoviesOfSimilarUsers(allMarkedFilms, similarUsers);
+        List<Integer> recommendedFilms = new ArrayList<>(moviesOfSimilarUsers);
+        recommendedFilms.removeAll(userRatings.keySet());  // Исключены фильмы, которые пользователь уже оценил
+        return filmStorage.getRecommendationsByMarks(recommendedFilms);
+    }
+
+    private int calculateSimilarity(Map<Integer, Integer> ratings1, Map<Integer, Integer> ratings2) {
+        int similarityScore = 0;
+        for (Map.Entry<Integer, Integer> entry : ratings1.entrySet()) {
+            Integer filmId = entry.getKey();
+            Integer mark1 = entry.getValue();
+            if (ratings2.containsKey(filmId)) {
+                Integer mark2 = ratings2.get(filmId);
+                similarityScore += Math.abs(mark1 - mark2);
+            }
+        }
+        return similarityScore;
+    }
+
+    private Set<Integer> getMoviesOfSimilarUsers(Map<Integer, Map<Integer,Integer>> allMarkedFilms, List<Integer> similarUsers) {
+        Set<Integer> moviesOfSimilarUsers = new HashSet<>();
+        for (Integer user : similarUsers) {
+            Map<Integer, Integer> userMarks = allMarkedFilms.get(user);
+            if (userMarks != null) {
+                moviesOfSimilarUsers.addAll(userMarks.keySet());
+            }
+        }
+        return moviesOfSimilarUsers;
     }
 
     public List<Event> getFeed(Integer userId) {

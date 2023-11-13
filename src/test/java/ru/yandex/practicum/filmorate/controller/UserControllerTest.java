@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
@@ -10,14 +11,26 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
+import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.service.UserService;
 
+import java.time.LocalDate;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @ExtendWith(SpringExtension.class)
@@ -30,6 +43,10 @@ public class UserControllerTest {
     private MockMvc mockMvc;
     @Autowired
     private JdbcTemplate jdbcTemplate;
+    @MockBean
+    private UserService userService;
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @BeforeEach
     public void before() {
@@ -203,5 +220,35 @@ public class UserControllerTest {
                                 "}")
                         .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(status().isOk());
+    }
+
+    @Test
+    void getRecommendationsByMarks_thenResponseStatusOk_WithListOfSortedFilmsByMarksInBody() throws Exception {
+        Film film1 = Film.builder()
+                .name("Film1")
+                .description("Film1 Description")
+                .releaseDate(LocalDate.of(1989, 12, 28))
+                .duration(120)
+                .mpa(new Mpa(3, "PG-13"))
+                .genres(List.of(new Genre(2, "Drama")))
+                .rate(0)
+                .rateByMarks(5)
+                .build();
+        film1.setId(1);
+
+        List<Film> films = new java.util.ArrayList<>(List.of(film1));
+        when(userService.getRecommendationsByMarks(1))
+                .thenReturn(films);
+
+        String response = mockMvc.perform(get("/users/1/recommendationsByMarks")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(films)))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        verify(userService).getRecommendationsByMarks(1);
+        assertEquals(objectMapper.writeValueAsString(films), response);
     }
 }
