@@ -22,7 +22,7 @@ DROP TABLE IF EXISTS likes_review CASCADE;
 
 DROP TABLE IF EXISTS feed CASCADE;
 
-
+DROP TABLE IF EXISTS marks CASCADE;
 
 CREATE TABLE IF NOT EXISTS mpa
 (
@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS films
     release_dt DATE,
     duration INTEGER,
     rate INTEGER,
+    rate_by_marks FLOAT,
     mpa_id INTEGER REFERENCES mpa (mpa_id)
 );
 
@@ -74,6 +75,14 @@ CREATE TABLE IF NOT EXISTS likes
 (
     film_id INTEGER NOT NULL REFERENCES films (film_id),
     user_id INTEGER NOT NULL REFERENCES users (user_id)
+);
+
+CREATE TABLE IF NOT EXISTS marks
+(
+    film_id INTEGER NOT NULL REFERENCES films (film_id),
+    user_id INTEGER NOT NULL REFERENCES users (user_id),
+    mark INTEGER check(mark >= 1 and mark <= 10),
+    PRIMARY KEY (film_id, user_id)
 );
 
 CREATE TABLE  IF NOT EXISTS directors (

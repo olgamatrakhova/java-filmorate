@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.model;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
@@ -14,6 +15,7 @@ import java.util.Set;
 @Data
 @Builder
 @ValidateUserName
+@AllArgsConstructor
 public class User {
     private int id;
     @NonNull

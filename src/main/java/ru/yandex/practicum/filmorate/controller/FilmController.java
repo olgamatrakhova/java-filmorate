@@ -7,6 +7,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import java.util.List;
 import java.util.Optional;
@@ -81,5 +82,29 @@ public class FilmController {
     public List<Film> getPopularFilmsByGenreAndYear(@RequestParam(defaultValue = "10") int count, @RequestParam Optional<Integer> genreId, @RequestParam Optional<Long> year) {
         log.info("Запрос на получение топ {} фильмов c жанром {} за год {} (getPopularFilmsByGenreAndYear({}, {}, {}))", count, genreId, year, count, genreId, year);
         return filmService.getPopularFilmsByGenreAndYear(count, genreId, year);
+    }
+
+    @GetMapping("/films/popularByMarks")
+    public List<Film> getPopularFilmsByMarks(@RequestParam(defaultValue = "10") int count,
+                                             @RequestParam Optional<Integer> genreId,
+                                             @RequestParam Optional<Long> year) {
+        log.info("Запрос на получение топ {} фильмов c жанром {} за год {} (getPopularFilmsByMarks({}, {}, {}))",
+                count, genreId, year, count, genreId, year);
+        return filmService.getPopularMarkedFilmsByGenreAndYear(count, genreId, year);
+    }
+
+    @GetMapping("/films/directorByMark/{directorId}")
+    public List<Film> getDirectorFilmsSortByMark(@PathVariable("directorId") @Min(1) int directorId,
+                                                 @RequestParam(value = "sortBy", defaultValue = "marks") String sortBy) {
+        log.info("Запрос ны вывод всех фильмов режиссера с id = {}, отсортированных по sort = {} (getDirectorFilmsSort({}, {}))",
+                directorId, sortBy, directorId, sortBy);
+        return filmService.getDirectorFilmsSortByMark(directorId, sortBy);
+    }
+
+    @PutMapping("/films/{id}/marks")
+    public void markFilm(@PathVariable Integer id, @RequestParam Integer userId,
+                         @RequestParam @Min(1) @Max(10) Integer mark) {
+        log.info("Запрос на добавление оценки {} фильму c id = {} от пользователя c id = {})", mark, id, userId);
+        filmService.markFilm(id, userId, mark);
     }
 }

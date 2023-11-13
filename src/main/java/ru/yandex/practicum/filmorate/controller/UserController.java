@@ -80,6 +80,12 @@ public class UserController {
         return userService.getRecommendations(id);
     }
 
+    @GetMapping("/users/{id}/recommendationsByMarks")
+    public List<Film> getRecommendationsByMarks(@PathVariable @Positive Integer id) {
+        log.info("Запрос рекомендации для пользователя с id = {} (getRecommendations({}))", id, id);
+        return userService.getRecommendationsByMarks(id);
+    }
+
     @GetMapping("/users/{id}/feed")
     public List<Event> getFeed(@PathVariable("id") Integer id) {
         log.info("Запрос на получение ленты событий пользователя c id = {} (getFeed({}))", id, id);

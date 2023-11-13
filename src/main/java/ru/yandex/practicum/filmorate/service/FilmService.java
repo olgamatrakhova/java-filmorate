@@ -18,6 +18,7 @@ public class FilmService {
     @Qualifier("filmDbStorage")
     private final FilmDbStorage filmStorage;
     private final EventService eventService;
+    private final UserService userService;
 
     public List<Film> getFilms() {
         return filmStorage.getFilms();
@@ -81,6 +82,13 @@ public class FilmService {
         }
     }
 
+    public void markFilm(int filmId, int userId, int mark) {
+        getFilmById(filmId);
+        userService.getUserById(userId);
+        filmStorage.markFilm(filmId, userId, mark);
+        eventService.createEvent(userId, EventType.MARK, EventOperation.ADD, filmId);
+    }
+
     public List<Film> getPopularFilmsByGenreAndYear(int limit, Optional<Integer> genreId, Optional<Long> year) {
         if (genreId.isEmpty() && year.isEmpty()) {
             return  getPopularFilms(limit);
@@ -91,5 +99,21 @@ public class FilmService {
         } else {
             return  filmStorage.getPopularFilmsByGenreAndYear(limit, genreId.get(), year.get());
         }
+    }
+
+    public List<Film> getPopularMarkedFilmsByGenreAndYear(int limit, Optional<Integer> genreId, Optional<Long> year) {
+        if (genreId.isEmpty() && year.isEmpty()) {
+            return  getPopularFilms(limit);
+        } else if (genreId.isPresent() && year.isEmpty()) {
+            return filmStorage.getPopularMarkedFilmsByGenre(limit, genreId.get());
+        } else if (genreId.isEmpty()) {
+            return filmStorage.getPopularMarkedFilmsByYear(limit, year.get());
+        } else {
+            return filmStorage.getPopularMarkedFilmsByGenreAndYear(limit, genreId.get(), year.get());
+        }
+    }
+
+    public List<Film> getDirectorFilmsSortByMark(int directorId, String sortBy) {
+        return filmStorage.getDirectorFilmsSortByMark(directorId, sortBy);
     }
 }
