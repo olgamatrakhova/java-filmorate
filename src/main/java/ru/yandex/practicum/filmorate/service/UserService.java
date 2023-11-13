@@ -96,7 +96,7 @@ public class UserService {
         Map<Integer,Integer> userRatings = allMarkedFilms.get(userId);
         Map<Integer, Integer> similarityScores = new HashMap<>();
 
-        for(Map.Entry<Integer, Map<Integer, Integer>> entry : allMarkedFilms.entrySet()) {
+        for (Map.Entry<Integer, Map<Integer, Integer>> entry : allMarkedFilms.entrySet()) {
             int otherUser = entry.getKey();
             if (otherUser != userId) {
                 Map<Integer, Integer> otherUserRatings = entry.getValue();
