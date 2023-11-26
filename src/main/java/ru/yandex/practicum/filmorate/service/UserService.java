@@ -3,16 +3,28 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.feed.Event;
+import ru.yandex.practicum.filmorate.model.feed.EventOperation;
+import ru.yandex.practicum.filmorate.model.feed.EventType;
+import ru.yandex.practicum.filmorate.storage.db.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.db.UserDbStorage;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
     @Qualifier("userDbStorage")
     private final UserDbStorage userStorage;
+    @Qualifier("filmDbStorage")
+    private final FilmDbStorage filmStorage;
+    private final EventService eventService;
+
 
     public List<User> getUsers() {
         return userStorage.getUsers();
@@ -36,10 +48,12 @@ public class UserService {
 
     public void addFriends(int userId, int friendId) {
         userStorage.addFriend(userId, friendId);
+        eventService.createEvent(userId, EventType.FRIEND, EventOperation.ADD, friendId);
     }
 
     public void deleteFriends(int userId, int friendId) {
         userStorage.deleteFriends(userId, friendId);
+        eventService.createEvent(userId, EventType.FRIEND, EventOperation.REMOVE, friendId);
     }
 
     public List<User> getFriends(int userId) {
@@ -48,5 +62,34 @@ public class UserService {
 
     public List<User> getCommonFriends(int userId, int otherId) {
         return userStorage.getCommonFriends(userId, otherId);
+    }
+
+    public List<Film> getRecommendations(Integer userId) {
+        Map<Integer, List<Integer>> allLikedFilms = filmStorage.getAllLikedFilmsId();
+        allLikedFilms.remove(userId);
+        List<Integer> filmsLikedByUser = filmStorage.getFilmsIdLikedByUser(userId);
+        int recommendedUserId = 0;
+        int maxOfIntersections = 0;
+        for (Map.Entry<Integer, List<Integer>> e : allLikedFilms.entrySet()) {
+            List<Integer> intersection = e.getValue().stream()
+                    .filter(filmsLikedByUser::contains)
+                    .collect(Collectors.toList());
+            if (intersection.size() > maxOfIntersections) {
+                maxOfIntersections = intersection.size();
+                recommendedUserId = e.getKey();
+            }
+        }
+        List<Integer> filmsLikedByRecommendedUser = allLikedFilms.get(recommendedUserId);
+        List<Integer> recommendedFilmIds = new ArrayList<>();
+        if (filmsLikedByRecommendedUser != null) {
+            recommendedFilmIds.addAll(filmsLikedByRecommendedUser);
+            recommendedFilmIds.removeAll(filmsLikedByUser);
+        }
+        return filmStorage.getRecommendations(recommendedFilmIds);
+    }
+
+    public List<Event> getFeed(Integer userId) {
+        getUserById(userId);
+        return eventService.getFeed(userId);
     }
 }
